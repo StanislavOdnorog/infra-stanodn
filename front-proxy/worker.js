@@ -29,7 +29,11 @@ const CONFIG = {
     "description": "Personal web services dashboard",
     "author": "Stanislav Odnorog",
     "primaryColor": "#3498db",
-    "backgroundColor": "#f8f9fa"
+    "backgroundColor": "#f8f9fa",
+    "logo": "https://avatars.githubusercontent.com/u/your-github-username",
+    "github": "https://github.com/your-github-username",
+    "linkedin": "https://linkedin.com/in/your-linkedin-username",
+    "hh": "https://hh.ru/resume/your-resume-id"
   }
 };
 
@@ -47,6 +51,26 @@ function generateHomepage() {
         <span class="service-link">${service.path}</span>
       </a>
     `;
+  }
+  
+  // Generate social links HTML if they exist in the config
+  let socialLinksHtml = '';
+  if (site.github || site.linkedin || site.hh) {
+    socialLinksHtml = '<div class="social-links">';
+    
+    if (site.github) {
+      socialLinksHtml += `<a href="${site.github}" target="_blank" class="social-link">GitHub</a>`;
+    }
+    
+    if (site.linkedin) {
+      socialLinksHtml += `<a href="${site.linkedin}" target="_blank" class="social-link">LinkedIn</a>`;
+    }
+    
+    if (site.hh) {
+      socialLinksHtml += `<a href="${site.hh}" target="_blank" class="social-link">HeadHunter</a>`;
+    }
+    
+    socialLinksHtml += '</div>';
   }
   
   return `
@@ -78,6 +102,16 @@ function generateHomepage() {
       header {
         margin-bottom: 2rem;
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .profile-pic {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        border: 3px solid var(--primary-color);
       }
       h1 {
         color: var(--primary-color);
@@ -128,11 +162,27 @@ function generateHomepage() {
         padding: 1rem;
         font-size: 0.9rem;
       }
+      .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin: 1rem 0;
+      }
+      .social-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+      .social-link:hover {
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <header>
+        ${site.logo ? `<img src="${site.logo}" alt="${site.author}" class="profile-pic" />` : ''}
         <h1>${site.title}</h1>
         <div class="subtitle">${site.description}</div>
       </header>
@@ -142,6 +192,7 @@ function generateHomepage() {
       </div>
       
       <footer>
+        ${socialLinksHtml}
         <p>&copy; ${new Date().getFullYear()} ${site.author}. All rights reserved.</p>
       </footer>
     </div>

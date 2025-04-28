@@ -18,15 +18,25 @@ jobs:
         with:
           node-version: '18'
       
+      - name: Verify config.json 
+        run: |
+          cd front-proxy
+          cat config.json
+          echo "Verifying JSON format..."
+          node -e "const config = require('./config.json'); console.log('✅ config.json is valid JSON!');"
+      
       - name: Install dependencies
         run: |
           cd front-proxy
           npm install
       
-      - name: Build
+      - name: Build with detailed logs
         run: |
           cd front-proxy
-          npm run build
+          ls -la
+          node build.js
+          ls -la dist/
+          cat dist/worker.js | head -20
       
       - name: Deploy to Cloudflare
         env:
@@ -36,4 +46,4 @@ jobs:
           cd front-proxy
           npm install -g wrangler
           wrangler --version
-          wrangler deploy 
+          wrangler deploy --minify 
