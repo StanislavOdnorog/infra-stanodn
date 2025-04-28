@@ -28,10 +28,12 @@ jobs:
           cd front-proxy
           npm run build
       
-      - name: Publish to Cloudflare
-        uses: cloudflare/wrangler-action@2.0.0
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: 'front-proxy'
-          command: publish 
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          cd front-proxy
+          npm install -g wrangler
+          wrangler --version
+          wrangler publish 
