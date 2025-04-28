@@ -1,4 +1,6 @@
 {
+  "services": {
+  },
   "site": {
     "title": "Stanislav Odnorog Infrastructure",
     "description": "Personal infrastructure service dashboard",
