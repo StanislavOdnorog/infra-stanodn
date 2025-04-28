@@ -1,28 +1,10 @@
 {
   "services": {
-    "proxmox": {
-      "path": "/proxmox",
-      "target": "https://home.stanodn.org:8006",
-      "description": "Proxmox VE Management",
-      "icon": "server"
-    },
-    "vps": {
-      "path": "/vps",
-      "target": "https://vps.stanodn.org",
-      "description": "Wireguard VPN",
-      "icon": "cloud"
-    },
-    "s3": {
-      "path": "/s3",
-      "target": "https://home.stanodn.org:9000",
-      "description": "S3 Storage Service",
-      "icon": "database"
-    },
-    "monitoring": {
-      "path": "/monitoring",
-      "target": "https://home.stanodn.org:3000",
-      "description": "Grafana Dashboards",
-      "icon": "chart-line"
+    "cv": {
+      "path": "/cv",
+      "target": "https://cv.stanodn.org",
+      "description": "CV",
+      "icon": "file-alt"
     }
   },
   "site": {

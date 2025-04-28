@@ -8,35 +8,23 @@
 // This will be replaced by wrangler with the actual config from GitHub
 const CONFIG = {
   "services": {
-    "proxmox": {
-      "path": "/proxmox",
-      "target": "https://home.stanodn.org:8006",
-      "description": "Proxmox VE",
-      "icon": "server"
-    },
-    "vps": {
-      "path": "/vps",
-      "target": "https://vps.stanodn.org",
-      "description": "VPS Management",
-      "icon": "cloud"
-    },
-    "s3": {
-      "path": "/s3",
-      "target": "https://home.stanodn.org:9000",
-      "description": "S3 Storage",
-      "icon": "database"
+    "cv": {
+      "path": "/cv",
+      "target": "https://cv.stanodn.org",
+      "description": "CV",
+      "icon": "file-alt"
     }
   },
   "site": {
-    "title": "Stanodn Infrastructure",
+    "title": "Stanislav Odnorog Infrastructure",
     "description": "Personal web services dashboard",
     "author": "Stanislav Odnorog",
     "primaryColor": "#3498db",
     "backgroundColor": "#f8f9fa",
-    "logo": "https://avatars.githubusercontent.com/u/your-github-username",
-    "github": "https://github.com/your-github-username",
-    "linkedin": "https://linkedin.com/in/your-linkedin-username",
-    "hh": "https://hh.ru/resume/your-resume-id"
+    "logo": "https://avatars.githubusercontent.com/u/124214595?v=4",
+    "github": "https://github.com/StanislavOdnorog",
+    "linkedin": "https://www.linkedin.com/in/stanislav-odnorog-378936212",
+    "hh": "https://hh.ru/resume/73460ec2ff0cd740120039ed1f4945566d3170"
   }
 };
 
