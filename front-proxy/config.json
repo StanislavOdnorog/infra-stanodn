@@ -1,12 +1,4 @@
 {
-  "services": {
-    "cv": {
-      "path": "/cv",
-      "target": "https://cv.stanodn.org",
-      "description": "CV",
-      "icon": "file-alt"
-    }
-  },
   "site": {
     "title": "Stanislav Odnorog Infrastructure",
     "description": "Personal infrastructure service dashboard",

@@ -7,14 +7,6 @@
 // Import service configuration
 // This will be replaced by wrangler with the actual config from GitHub
 const CONFIG = {
-  "services": {
-    "cv": {
-      "path": "/cv",
-      "target": "https://cv.stanodn.org",
-      "description": "CV",
-      "icon": "file-alt"
-    }
-  },
   "site": {
     "title": "Stanislav Odnorog Infrastructure",
     "description": "Personal web services dashboard",
