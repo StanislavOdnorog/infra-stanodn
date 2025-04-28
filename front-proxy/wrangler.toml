@@ -1,0 +1,15 @@
+name = "front-service"
+main = "worker.js"
+compatibility_date = "2023-06-28"
+
+# Custom build with GitHub configuration
+[build]
+command = "node build.js"
+
+# Environments
+[env.production]
+workers_dev = true
+route = "stanodn.org/*"
+
+[env.staging]
+workers_dev = true 

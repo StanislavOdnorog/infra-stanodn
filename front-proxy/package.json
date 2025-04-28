@@ -1,0 +1,20 @@
+{
+  "name": "front-proxy",
+  "version": "1.0.0",
+  "description": "Personal web page and service proxy",
+  "main": "worker.js",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "wrangler dev",
+    "publish": "wrangler publish",
+    "format": "prettier --write '**/*.{js,css,json,md}'"
+  },
+  "author": "Stanislav Odnorog",
+  "license": "MIT",
+  "dependencies": {
+    "wrangler": "^2.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.8.0"
+  }
+} 

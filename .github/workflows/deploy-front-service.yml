@@ -1,0 +1,38 @@
+name: Deploy Front Service
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'front-proxy/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      
+      - name: Install dependencies
+        run: |
+          cd front-proxy
+          npm install
+      
+      - name: Build
+        run: |
+          cd front-proxy
+          npm run build
+      
+      - name: Publish to Cloudflare
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: 'front-proxy'
+          command: publish 
