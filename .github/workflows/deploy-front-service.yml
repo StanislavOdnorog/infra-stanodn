@@ -36,4 +36,4 @@ jobs:
           cd front-proxy
           npm install -g wrangler
           wrangler --version
-          wrangler publish 
+          wrangler deploy 
