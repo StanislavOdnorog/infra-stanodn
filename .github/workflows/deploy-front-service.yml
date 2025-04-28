@@ -2,7 +2,6 @@ name: Deploy Front Service
 
 on:
   push:
-    branches: [ main ]
     paths:
       - 'front-proxy/**'
   workflow_dispatch:
@@ -17,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
       
       - name: Install dependencies
         run: |
