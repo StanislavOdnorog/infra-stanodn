@@ -11,17 +11,20 @@ const CONFIG = {
     "proxmox": {
       "path": "/proxmox",
       "target": "https://home.stanodn.org:8006",
-      "description": "Proxmox VE"
+      "description": "Proxmox VE",
+      "icon": "server"
     },
     "vps": {
       "path": "/vps",
       "target": "https://vps.stanodn.org",
-      "description": "VPS Management"
+      "description": "VPS Management",
+      "icon": "cloud"
     },
     "s3": {
       "path": "/s3",
       "target": "https://home.stanodn.org:9000",
-      "description": "S3 Storage"
+      "description": "S3 Storage",
+      "icon": "database"
     }
   },
   "site": {
@@ -44,11 +47,19 @@ function generateHomepage() {
   
   let serviceCardsHtml = '';
   for (const [id, service] of Object.entries(services)) {
+    // Get icon or use question mark as fallback
+    const icon = service.icon || 'question';
+    
     serviceCardsHtml += `
       <a href="${service.path}" class="service-card">
-        <h3>${id}</h3>
-        <p>${service.description}</p>
-        <span class="service-link">${service.path}</span>
+        <div class="service-icon">
+          <i class="fas fa-${icon}"></i>
+        </div>
+        <div class="service-content">
+          <h3>${id}</h3>
+          <p>${service.description}</p>
+          <span class="service-link">${service.path}</span>
+        </div>
       </a>
     `;
   }
@@ -59,15 +70,15 @@ function generateHomepage() {
     socialLinksHtml = '<div class="social-links">';
     
     if (site.github) {
-      socialLinksHtml += `<a href="${site.github}" target="_blank" class="social-link">GitHub</a>`;
+      socialLinksHtml += `<a href="${site.github}" target="_blank" class="social-link"><i class="fab fa-github"></i> GitHub</a>`;
     }
     
     if (site.linkedin) {
-      socialLinksHtml += `<a href="${site.linkedin}" target="_blank" class="social-link">LinkedIn</a>`;
+      socialLinksHtml += `<a href="${site.linkedin}" target="_blank" class="social-link"><i class="fab fa-linkedin"></i> LinkedIn</a>`;
     }
     
     if (site.hh) {
-      socialLinksHtml += `<a href="${site.hh}" target="_blank" class="social-link">HeadHunter</a>`;
+      socialLinksHtml += `<a href="${site.hh}" target="_blank" class="social-link"><i class="fas fa-briefcase"></i> HeadHunter</a>`;
     }
     
     socialLinksHtml += '</div>';
@@ -80,6 +91,8 @@ function generateHomepage() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${site.title}</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
       :root {
         --primary-color: ${site.primaryColor || '#3498db'};
@@ -135,10 +148,25 @@ function generateHomepage() {
         text-decoration: none;
         color: inherit;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        align-items: center;
       }
       .service-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      }
+      .service-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-right: 1rem;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .service-content {
+        flex: 1;
       }
       .service-card h3 {
         color: var(--primary-color);
@@ -173,6 +201,11 @@ function generateHomepage() {
         text-decoration: none;
         font-weight: 500;
         transition: color 0.2s;
+        display: flex;
+        align-items: center;
+      }
+      .social-link i {
+        margin-right: 0.5rem;
       }
       .social-link:hover {
         text-decoration: underline;
