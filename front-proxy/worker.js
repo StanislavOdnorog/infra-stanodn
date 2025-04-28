@@ -8,28 +8,17 @@
 // This will be replaced by wrangler with the actual config from GitHub
 const CONFIG = {
   "services": {
-    "proxmox": {
-      "path": "/proxmox",
-      "target": "https://home.stanodn.org:8006",
-      "description": "Proxmox VE"
-    },
-    "vps": {
-      "path": "/vps",
-      "target": "https://vps.stanodn.org",
-      "description": "VPS Management"
-    },
-    "s3": {
-      "path": "/s3",
-      "target": "https://home.stanodn.org:9000",
-      "description": "S3 Storage"
-    }
   },
   "site": {
-    "title": "Stanodn Infrastructure",
+    "title": "Stanislav Odnorog Infrastructure",
     "description": "Personal web services dashboard",
     "author": "Stanislav Odnorog",
     "primaryColor": "#3498db",
-    "backgroundColor": "#f8f9fa"
+    "backgroundColor": "#f8f9fa",
+    "logo": "https://avatars.githubusercontent.com/u/124214595?v=4",
+    "github": "https://github.com/StanislavOdnorog",
+    "linkedin": "https://www.linkedin.com/in/stanislav-odnorog-378936212",
+    "hh": "https://hh.ru/resume/73460ec2ff0cd740120039ed1f4945566d3170"
   }
 };
 
@@ -40,13 +29,41 @@ function generateHomepage() {
   
   let serviceCardsHtml = '';
   for (const [id, service] of Object.entries(services)) {
+    // Get icon or use question mark as fallback
+    const icon = service.icon || 'question';
+    
     serviceCardsHtml += `
       <a href="${service.path}" class="service-card">
-        <h3>${id}</h3>
-        <p>${service.description}</p>
-        <span class="service-link">${service.path}</span>
+        <div class="service-icon">
+          <i class="fas fa-${icon}"></i>
+        </div>
+        <div class="service-content">
+          <h3>${id}</h3>
+          <p>${service.description}</p>
+          <span class="service-link">${service.path}</span>
+        </div>
       </a>
     `;
+  }
+  
+  // Generate social links HTML if they exist in the config
+  let socialLinksHtml = '';
+  if (site.github || site.linkedin || site.hh) {
+    socialLinksHtml = '<div class="social-links">';
+    
+    if (site.github) {
+      socialLinksHtml += `<a href="${site.github}" target="_blank" class="social-link"><i class="fab fa-github"></i> GitHub</a>`;
+    }
+    
+    if (site.linkedin) {
+      socialLinksHtml += `<a href="${site.linkedin}" target="_blank" class="social-link"><i class="fab fa-linkedin"></i> LinkedIn</a>`;
+    }
+    
+    if (site.hh) {
+      socialLinksHtml += `<a href="${site.hh}" target="_blank" class="social-link"><i class="fas fa-briefcase"></i> HeadHunter</a>`;
+    }
+    
+    socialLinksHtml += '</div>';
   }
   
   return `
@@ -56,6 +73,8 @@ function generateHomepage() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${site.title}</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
       :root {
         --primary-color: ${site.primaryColor || '#3498db'};
@@ -78,6 +97,16 @@ function generateHomepage() {
       header {
         margin-bottom: 2rem;
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .profile-pic {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        border: 3px solid var(--primary-color);
       }
       h1 {
         color: var(--primary-color);
@@ -101,10 +130,25 @@ function generateHomepage() {
         text-decoration: none;
         color: inherit;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        align-items: center;
       }
       .service-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      }
+      .service-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-right: 1rem;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .service-content {
+        flex: 1;
       }
       .service-card h3 {
         color: var(--primary-color);
@@ -128,11 +172,32 @@ function generateHomepage() {
         padding: 1rem;
         font-size: 0.9rem;
       }
+      .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin: 1rem 0;
+      }
+      .social-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+      }
+      .social-link i {
+        margin-right: 0.5rem;
+      }
+      .social-link:hover {
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <header>
+        ${site.logo ? `<img src="${site.logo}" alt="${site.author}" class="profile-pic" />` : ''}
         <h1>${site.title}</h1>
         <div class="subtitle">${site.description}</div>
       </header>
@@ -142,6 +207,7 @@ function generateHomepage() {
       </div>
       
       <footer>
+        ${socialLinksHtml}
         <p>&copy; ${new Date().getFullYear()} ${site.author}. All rights reserved.</p>
       </footer>
     </div>

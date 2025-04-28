@@ -6,13 +6,13 @@
   "scripts": {
     "build": "node build.js",
     "dev": "wrangler dev",
-    "publish": "wrangler publish",
+    "deploy": "wrangler deploy",
     "format": "prettier --write '**/*.{js,css,json,md}'"
   },
   "author": "Stanislav Odnorog",
   "license": "MIT",
   "dependencies": {
-    "wrangler": "^2.0.0"
+    "wrangler": "^4.0.0"
   },
   "devDependencies": {
     "prettier": "^2.8.0"

@@ -1,5 +1,5 @@
-name = "front-service"
-main = "worker.js"
+name = "front-proxy"
+main = "dist/worker.js"
 compatibility_date = "2023-06-28"
 
 # Custom build with GitHub configuration
@@ -9,7 +9,9 @@ command = "node build.js"
 # Environments
 [env.production]
 workers_dev = true
-route = "stanodn.org/*"
+routes = [
+  "stanodn.org/*"
+]
 
 [env.staging]
 workers_dev = true 
