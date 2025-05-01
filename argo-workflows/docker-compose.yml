@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  argo-server:
+    image: argoproj/argocli:${ARGO_VERSION:-latest}
+    command: argo server
+    ports:
+      - "2746:2746"
+    environment:
+      - ARGO_SERVER=argo-server:2746
+    volumes:
+      - ./config:/config
+      - ./workflows:/workflows
+    networks:
+      - argo-network
+
+  argo-executor:
+    image: argoproj/argoexec:${ARGO_VERSION:-latest}
+    command: argoexec
+    environment:
+      - ARGO_SERVER=argo-server:2746
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./workflows:/workflows
+    networks:
+      - argo-network
+
+  minio:
+    image: minio/minio:latest
+    command: server /data
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./minio-data:/data
+    networks:
+      - argo-network
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      - argo-network
+
+networks:
+  argo-network:
+    driver: bridge 
