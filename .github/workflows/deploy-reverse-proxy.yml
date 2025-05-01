@@ -39,6 +39,7 @@ jobs:
         with:
           host: ${{ secrets.REVERSE_PROXY_SERVER_HOST }}
           username: ${{ secrets.REVERSE_PROXY_SERVER_USERNAME }}
+          port: ${{ secrets.REVERSE_PROXY_SERVER_PORT }}
           key: ${{ secrets.REVERSE_PROXY_SERVER_SSH_KEY }}
           script: |
             cd reverse-proxy
