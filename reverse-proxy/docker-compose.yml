@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/conf.d/routes:/etc/nginx/conf.d/routes
+      - ./ssl:/etc/nginx/ssl
+    restart: unless-stopped
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    driver: bridge 

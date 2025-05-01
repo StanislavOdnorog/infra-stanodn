@@ -1,0 +1,19 @@
+# SSL Certificates
+ssl/*
+!ssl/.gitkeep
+
+# Environment files
+.env
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Logs
+*.log
+logs/
+
+# Docker
+.docker/ 
