@@ -1,7 +1,6 @@
 ---
 - name: Test Infrastructure Playbook
   hosts: localhost
-  become: yes
   gather_facts: yes
 
   tasks:
