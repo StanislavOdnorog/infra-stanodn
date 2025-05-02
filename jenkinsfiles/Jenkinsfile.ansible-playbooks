@@ -61,23 +61,6 @@ pipeline {
             }
         }
 
-        stage('Validate Playbook') {
-            steps {
-                script {
-                    if (!params.PLAYBOOK) {
-                        error "Please specify a playbook to run"
-                    }
-                    if (!fileExists("ansible/playbooks/${params.PLAYBOOK}")) {
-                        error "Playbook ${params.PLAYBOOK} does not exist in ansible/playbooks/"
-                    }
-                }
-                sh """
-                    cd ansible
-                    ansible-playbook --syntax-check playbooks/${params.PLAYBOOK} -i ${INVENTORY_FILE}
-                """
-            }
-        }
-
         stage('Run Ansible Playbook') {
             steps {
                 ansiblePlaybook(
@@ -112,15 +95,6 @@ pipeline {
         }
         failure {
             echo '❌ Playbook execution failed!'
-            emailext(
-                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """
-                    Playbook: ${params.PLAYBOOK}
-                    Environment: ${params.ENVIRONMENT}
-                    Check console output at ${env.BUILD_URL}
-                """,
-                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
-            )
         }
     }
 } 
