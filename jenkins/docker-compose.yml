@@ -17,7 +17,7 @@ services:
       context: jenkins-agent
     container_name: jenkins-agent
     environment:
-      - JENKINS_URL=https://jenkins.stanodn.org
+      - JENKINS_URL=http://jenkins-server:8080
       - JENKINS_AGENT_NAME=self-agent
       - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
       - JENKINS_SECRET=${JENKINS_SECRET:-""}
