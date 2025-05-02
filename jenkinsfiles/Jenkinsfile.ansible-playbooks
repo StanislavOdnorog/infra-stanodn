@@ -1,3 +1,12 @@
+def playbookChoices = []
+node {
+    checkout scm
+    def playbooks = sh(returnStdout: true, script: "ls ansible/playbooks/*.yml 2>/dev/null || true")
+    playbooks.split().each { playbook ->
+        playbookChoices << playbook.replace('ansible/playbooks/', '')
+    }
+}
+
 pipeline {
     agent {
         label 'ansible'
@@ -6,10 +15,7 @@ pipeline {
     parameters {
         choice(
             name: 'PLAYBOOK',
-            choices: script {
-                def playbooks = findFiles(glob: 'ansible/playbooks/*.yml')
-                return playbooks.collect { it.name }
-            },
+            choices: playbookChoices,
             description: 'Select playbook to run'
         )
         string(
@@ -110,14 +116,6 @@ pipeline {
         }
         failure {
             echo '❌ Playbook execution failed!'
-            emailext(
-                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
-                body: """
-                    Playbook: ${params.PLAYBOOK}
-                    Check console output at ${env.BUILD_URL}
-                """,
-                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
-            )
         }
     }
 } 
