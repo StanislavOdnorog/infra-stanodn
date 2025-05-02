@@ -94,7 +94,7 @@ pipeline {
                     tags: params.TAGS ?: '',
                     skippedTags: params.SKIPPED_TAGS ?: '',
                     startAtTask: params.START_AT_TASK ?: '',
-                    check: params.DRY_RUN
+                    checkMode: params.DRY_RUN
                 )
             }
         }
