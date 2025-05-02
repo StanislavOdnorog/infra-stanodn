@@ -9,11 +9,6 @@ pipeline {
             defaultValue: '',
             description: 'Name of the playbook to run (e.g., test-playbook.yml)'
         )
-        choice(
-            name: 'ENVIRONMENT',
-            choices: ['dev', 'staging', 'prod'],
-            description: 'Select environment'
-        )
         booleanParam(
             name: 'DRY_RUN',
             defaultValue: false,
@@ -48,7 +43,6 @@ pipeline {
 
     environment {
         ANSIBLE_FORCE_COLOR = '1'
-        INVENTORY_FILE = "ansible/inventory/${params.ENVIRONMENT}/hosts.yml"
     }
 
     stages {
