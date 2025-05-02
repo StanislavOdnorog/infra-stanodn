@@ -5,6 +5,7 @@ node {
     playbooks.split().each { playbook ->
         playbookChoices << playbook.replace('ansible/playbooks/', '')
     }
+    playbookChoices.add(0, 'update_playbooks')
 }
 
 pipeline {
@@ -16,7 +17,7 @@ pipeline {
         choice(
             name: 'PLAYBOOK',
             choices: playbookChoices,
-            description: 'Select playbook to run'
+            description: 'Select playbook to run or update_playbooks to refresh the list'
         )
         string(
             name: 'INVENTORY_FILE',
@@ -66,7 +67,19 @@ pipeline {
             }
         }
 
+        stage('Update Playbooks List') {
+            when {
+                expression { params.PLAYBOOK == 'update_playbooks' }
+            }
+            steps {
+                echo '✅ Playbook list updated successfully!'
+            }
+        }
+
         stage('Validate Playbook') {
+            when {
+                expression { params.PLAYBOOK != 'update_playbooks' }
+            }
             steps {
                 script {
                     if (!params.PLAYBOOK) {
@@ -84,6 +97,9 @@ pipeline {
         }
 
         stage('Run Ansible Playbook') {
+            when {
+                expression { params.PLAYBOOK != 'update_playbooks' }
+            }
             steps {
                 ansiblePlaybook(
                     playbook: "ansible/playbooks/${params.PLAYBOOK}",
