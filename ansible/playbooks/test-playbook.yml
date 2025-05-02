@@ -17,20 +17,6 @@
       debug:
         var: disk_space.stdout_lines
 
-    - name: Check memory usage
-      shell: free -m
-      register: memory_usage
-      changed_when: false
-
-    - name: Display memory usage
+    - name: Display OK message  
       debug:
-        var: memory_usage.stdout_lines
-
-    - name: Check running processes
-      shell: ps aux | head -n 10
-      register: processes
-      changed_when: false
-
-    - name: Display top processes
-      debug:
-        var: processes.stdout_lines 
+        msg: "Successfully completed the playbook"
