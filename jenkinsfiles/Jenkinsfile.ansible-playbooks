@@ -4,10 +4,18 @@ pipeline {
     }
 
     parameters {
-        string(
+        choice(
             name: 'PLAYBOOK',
+            choices: script {
+                def playbooks = findFiles(glob: 'ansible/playbooks/*.yml')
+                return playbooks.collect { it.name }
+            },
+            description: 'Select playbook to run'
+        )
+        string(
+            name: 'INVENTORY_FILE',
             defaultValue: '',
-            description: 'Name of the playbook to run (e.g., test-playbook.yml)'
+            description: 'Path to inventory file (optional)'
         )
         booleanParam(
             name: 'DRY_RUN',
@@ -52,12 +60,20 @@ pipeline {
             }
         }
 
-        stage('List Available Playbooks') {
+        stage('Validate Playbook') {
             steps {
-                sh '''
-                    echo "Available playbooks in ansible/playbooks/:"
-                    ls -1 ansible/playbooks/*.yml | sed 's|ansible/playbooks/||'
-                '''
+                script {
+                    if (!params.PLAYBOOK) {
+                        error "Please specify a playbook to run"
+                    }
+                    if (!fileExists("ansible/playbooks/${params.PLAYBOOK}")) {
+                        error "Playbook ${params.PLAYBOOK} does not exist in ansible/playbooks/"
+                    }
+                }
+                sh """
+                    cd ansible
+                    ansible-playbook --syntax-check playbooks/${params.PLAYBOOK} ${params.INVENTORY_FILE ? "-i ${params.INVENTORY_FILE}" : ""}
+                """
             }
         }
 
@@ -65,13 +81,12 @@ pipeline {
             steps {
                 ansiblePlaybook(
                     playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                    inventory: INVENTORY_FILE ?: '',
+                    inventory: params.INVENTORY_FILE ?: '',
                     credentialsId: 'ansible-ssh-key',
                     disableHostKeyChecking: true,
                     colorized: true,
                     extraVars: [
-                        ansible_python_interpreter: '/usr/bin/python3',
-                        environment: params.ENVIRONMENT
+                        ansible_python_interpreter: '/usr/bin/python3'
                     ],
                     limit: params.LIMIT ?: '',
                     tags: params.TAGS ?: '',
@@ -87,7 +102,7 @@ pipeline {
         always {
             cleanWs()
             script {
-                currentBuild.description = "Playbook: ${params.PLAYBOOK} | Env: ${params.ENVIRONMENT}"
+                currentBuild.description = "Playbook: ${params.PLAYBOOK}"
             }
         }
         success {
@@ -95,6 +110,14 @@ pipeline {
         }
         failure {
             echo '❌ Playbook execution failed!'
+            emailext(
+                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """
+                    Playbook: ${params.PLAYBOOK}
+                    Check console output at ${env.BUILD_URL}
+                """,
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+            )
         }
     }
 } 
