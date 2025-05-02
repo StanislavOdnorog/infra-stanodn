@@ -6,7 +6,6 @@ services:
     container_name: jenkins-server
     ports:
       - "8080:8080"
-      - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
     networks:
@@ -17,7 +16,7 @@ services:
       context: jenkins-agent
     container_name: jenkins-agent
     environment:
-      - JENKINS_URL=https://jenkins.stanodn.org
+      - JENKINS_URL=jenkins-server
       - JENKINS_AGENT_NAME=self-agent
       - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
       - JENKINS_SECRET=${JENKINS_SECRET:-""}
