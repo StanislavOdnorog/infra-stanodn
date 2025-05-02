@@ -82,7 +82,7 @@ pipeline {
             steps {
                 ansiblePlaybook(
                     playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                    inventory: INVENTORY_FILE,
+                    inventory: INVENTORY_FILE ?: '',
                     credentialsId: 'ansible-ssh-key',
                     disableHostKeyChecking: true,
                     colorized: true,
