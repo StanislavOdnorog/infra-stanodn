@@ -1,0 +1,37 @@
+---
+- name: Test Infrastructure Playbook
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Display system information
+      debug:
+        msg: "Running on {{ ansible_hostname }} ({{ ansible_os_family }})"
+
+    - name: Check disk space
+      shell: df -h
+      register: disk_space
+      changed_when: false
+
+    - name: Display disk space
+      debug:
+        var: disk_space.stdout_lines
+
+    - name: Check memory usage
+      shell: free -m
+      register: memory_usage
+      changed_when: false
+
+    - name: Display memory usage
+      debug:
+        var: memory_usage.stdout_lines
+
+    - name: Check running processes
+      shell: ps aux | head -n 10
+      register: processes
+      changed_when: false
+
+    - name: Display top processes
+      debug:
+        var: processes.stdout_lines 

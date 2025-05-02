@@ -1,0 +1,132 @@
+pipeline {
+    agent {
+        label 'ansible'
+    }
+
+    parameters {
+        string(
+            name: 'PLAYBOOK',
+            defaultValue: '',
+            description: 'Name of the playbook to run (e.g., test-playbook.yml)'
+        )
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'staging', 'prod'],
+            description: 'Select environment'
+        )
+        booleanParam(
+            name: 'DRY_RUN',
+            defaultValue: false,
+            description: 'Run in check mode (dry run)'
+        )
+        string(
+            name: 'LIMIT',
+            defaultValue: '',
+            description: 'Limit execution to specific hosts (optional)'
+        )
+        string(
+            name: 'TAGS',
+            defaultValue: '',
+            description: 'Only run tasks with these tags (optional)'
+        )
+        string(
+            name: 'SKIPPED_TAGS',
+            defaultValue: '',
+            description: 'Skip tasks with these tags (optional)'
+        )
+        string(
+            name: 'START_AT_TASK',
+            defaultValue: '',
+            description: 'Start execution at this task (optional)'
+        )
+    }
+
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    environment {
+        ANSIBLE_FORCE_COLOR = '1'
+        INVENTORY_FILE = "ansible/inventory/${params.ENVIRONMENT}/hosts.yml"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('List Available Playbooks') {
+            steps {
+                sh '''
+                    echo "Available playbooks in ansible/playbooks/:"
+                    ls -1 ansible/playbooks/*.yml | sed 's|ansible/playbooks/||'
+                '''
+            }
+        }
+
+        stage('Validate Playbook') {
+            steps {
+                script {
+                    if (!params.PLAYBOOK) {
+                        error "Please specify a playbook to run"
+                    }
+                    if (!fileExists("ansible/playbooks/${params.PLAYBOOK}")) {
+                        error "Playbook ${params.PLAYBOOK} does not exist in ansible/playbooks/"
+                    }
+                }
+                sh """
+                    cd ansible
+                    ansible-playbook --syntax-check playbooks/${params.PLAYBOOK} -i ${INVENTORY_FILE}
+                """
+            }
+        }
+
+        stage('Run Ansible Playbook') {
+            steps {
+                ansiblePlaybook(
+                    playbook: "ansible/playbooks/${params.PLAYBOOK}",
+                    inventory: INVENTORY_FILE,
+                    credentialsId: 'ansible-ssh-key',
+                    disableHostKeyChecking: true,
+                    colorized: true,
+                    extraVars: [
+                        ansible_python_interpreter: '/usr/bin/python3',
+                        environment: params.ENVIRONMENT
+                    ],
+                    limit: params.LIMIT ?: '',
+                    tags: params.TAGS ?: '',
+                    skippedTags: params.SKIPPED_TAGS ?: '',
+                    startAtTask: params.START_AT_TASK ?: '',
+                    check: params.DRY_RUN
+                )
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+            script {
+                currentBuild.description = "Playbook: ${params.PLAYBOOK} | Env: ${params.ENVIRONMENT}"
+            }
+        }
+        success {
+            echo '✅ Playbook executed successfully!'
+        }
+        failure {
+            echo '❌ Playbook execution failed!'
+            emailext(
+                subject: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+                body: """
+                    Playbook: ${params.PLAYBOOK}
+                    Environment: ${params.ENVIRONMENT}
+                    Check console output at ${env.BUILD_URL}
+                """,
+                recipientProviders: [[$class: 'DevelopersRecipientProvider']]
+            )
+        }
+    }
+} 
