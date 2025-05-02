@@ -3,6 +3,9 @@ name: Deploy Reverse Proxy
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'reverse-proxy/**'
+      - '.github/workflows/deploy-reverse-proxy.yml'
   workflow_dispatch:
 
 jobs:
