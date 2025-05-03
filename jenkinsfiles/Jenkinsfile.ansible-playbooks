@@ -21,7 +21,7 @@ pipeline {
         )
         string(
             name: 'INVENTORY_FILE',
-            defaultValue: 'hosts.ini',
+            defaultValue: 'ansible/hosts.ini',
             description: 'Path to inventory file (optional)'
         )
         booleanParam(
@@ -96,24 +96,20 @@ pipeline {
             }
         }
 
-        stage('Run Ansible Playbook') {
-            when {
-                expression { params.PLAYBOOK != 'update_playbooks' }
-            }
+stage('Run Ansible Playbook') {
             steps {
-                withCredentials([file(
-                    credentialsId: 'ansible-inventory',
-                    variable: 'INVENTORY_FILE'
-                )]) {
+                withCredentials([file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT')]) {
+                    writeFile file: 'ansible/hosts.ini', text: readFile(env.INVENTORY_CONTENT)
+                    
                     ansiblePlaybook(
                         playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                        inventory: params.INVENTORY_FILE ?: '',
+                        inventory: '${params.INVENTORY_FILE}',
                         credentialsId: 'ansible-ssh-key',
                         disableHostKeyChecking: true,
                         colorized: true,
-                    extraVars: [
-                        ansible_python_interpreter: '/usr/bin/python3'
-                    ],
+                        extraVars: [
+                            ansible_python_interpreter: '/usr/bin/python3'
+                        ],
                         limit: params.LIMIT ?: '',
                         tags: params.TAGS ?: '',
                         skippedTags: params.SKIPPED_TAGS ?: '',
