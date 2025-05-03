@@ -1,0 +1,26 @@
+---
+# Ubuntu Cloud Image Configuration
+ubuntu_version: "22.04"
+ubuntu_arch: "amd64"
+image_url: "https://cloud-images.ubuntu.com/{{ ubuntu_version }}/current/{{ ubuntu_version }}-server-cloudimg-{{ ubuntu_arch }}.img"
+image_name: "ubuntu-{{ ubuntu_version }}-server-cloudimg-{{ ubuntu_arch }}.img"
+
+# Proxmox Configuration
+storage_name: "local-lvm"
+vm_id: 9000
+template_name: "ubuntu-{{ ubuntu_version }}-template"
+vm_cores: 2
+vm_memory: 2048
+vm_balloon: 1024
+vm_net_model: "virtio"
+vm_net_bridge: "vmbr0"
+
+# Cloud-Init Configuration
+cloud_init_user: "ubuntu"
+cloud_init_password: "{{ vault_cloud_init_password }}"
+cloud_init_ssh_key: "{{ vault_cloud_init_ssh_key }}"
+cloud_init_dns_servers:
+  - "8.8.8.8"
+  - "8.8.4.4"
+cloud_init_search_domains:
+  - "stanodn.org" 

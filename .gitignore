@@ -1,0 +1,22 @@
+# Nginx SSL Certificates
+nginx/ssl/*
+!nginx/ssl/.gitkeep
+nginx/logs/*
+
+# Environment files
+.env
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Logs
+*.log
+
+# Docker
+.docker/ 
+
+# Ansible
+*.ini

@@ -1,0 +1,7 @@
+---
+- name: Create Ubuntu Template in Proxmox
+  hosts: proxmox-cluster
+  tasks:
+    - name: Debug that inventory is loaded
+      debug:
+        msg: "Inventory loaded {{ inventory_hostname }} "

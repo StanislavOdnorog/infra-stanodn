@@ -1,0 +1,13 @@
+---
+- name: Create Ubuntu Template in Proxmox
+  hosts: proxmox-cluster
+  become: yes
+  vars_files:
+    - ../../../vars/proxmox.yml
+    - ../../../vars/ubuntu.yml
+  roles:
+    - role: provision/proxmox/image-templates/ubuntu
+      tags: 
+        - template
+        - ubuntu
+        - proxmox
