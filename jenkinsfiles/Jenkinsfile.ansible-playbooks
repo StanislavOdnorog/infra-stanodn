@@ -96,8 +96,11 @@ pipeline {
             }
         }
 
-stage('Run Ansible Playbook') {
+        stage('Run Ansible Playbook') {
             steps {
+                when {
+                    expression { params.PLAYBOOK != 'update_playbooks' }
+                }   
                 withCredentials([file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT')]) {
                     writeFile file: 'ansible/hosts.ini', text: readFile(env.INVENTORY_CONTENT)
                     
