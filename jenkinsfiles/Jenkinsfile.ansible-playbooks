@@ -21,7 +21,7 @@ pipeline {
         )
         string(
             name: 'INVENTORY_FILE',
-            defaultValue: '',
+            defaultValue: 'hosts.ini',
             description: 'Path to inventory file (optional)'
         )
         booleanParam(
@@ -64,6 +64,12 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Prepare Inventory') {
+            steps {
+                writeFile file: 'ansible/hosts.ini', text: readFile(credentials('ansible-inventory'))
             }
         }
 
