@@ -1,0 +1,5 @@
+---
+proxmox_api_host: "https://your-proxmox-host:8006"
+proxmox_api_user: "root@pam"
+proxmox_api_token_id: "your-token-id"
+proxmox_api_token_secret: "your-token-secret" 

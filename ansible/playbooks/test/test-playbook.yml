@@ -1,6 +1,9 @@
 ---
 - name: Create Ubuntu Template in Proxmox
   hosts: proxmox-cluster
+  vars_files:
+    - ../../group_vars/all.yml
+    - ../../group_vars/vault.yml
   tasks:
     - name: Debug that inventory is loaded
       debug:

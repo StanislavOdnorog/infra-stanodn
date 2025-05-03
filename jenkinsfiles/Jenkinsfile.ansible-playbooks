@@ -58,12 +58,25 @@ pipeline {
 
     environment {
         ANSIBLE_FORCE_COLOR = '1'
+        ANSIBLE_VAULT_PASSWORD_FILE = '${WORKSPACE}/ansible/.vault_pass'
     }
 
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Setup') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT'),
+                    string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASSWORD')
+                ]) {
+                    writeFile file: 'ansible/hosts.ini', text: readFile(env.INVENTORY_CONTENT)
+                    writeFile file: 'ansible/.vault_pass', text: env.VAULT_PASSWORD
+                }
             }
         }
 
@@ -101,25 +114,21 @@ pipeline {
                 expression { params.PLAYBOOK != 'update_playbooks' }
             }   
             steps {
-                withCredentials([file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT')]) {
-                    writeFile file: 'ansible/hosts.ini', text: readFile(env.INVENTORY_CONTENT)
-                    
-                    ansiblePlaybook(
-                        playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                        inventory: params.INVENTORY_FILE,
-                        credentialsId: 'ansible-ssh-key',
-                        disableHostKeyChecking: true,
-                        colorized: true,
-                        extraVars: [
-                            ansible_python_interpreter: '/usr/bin/python3'
-                        ],
-                        limit: params.LIMIT ?: '',
-                        tags: params.TAGS ?: '',
-                        skippedTags: params.SKIPPED_TAGS ?: '',
-                        startAtTask: params.START_AT_TASK ?: '',
-                        checkMode: params.DRY_RUN
-                    )
-                }
+                ansiblePlaybook(
+                    playbook: "ansible/playbooks/${params.PLAYBOOK}",
+                    inventory: params.INVENTORY_FILE,
+                    credentialsId: 'ansible-ssh-key',
+                    disableHostKeyChecking: true,
+                    colorized: true,
+                    extraVars: [
+                        ansible_python_interpreter: '/usr/bin/python3'
+                    ],
+                    limit: params.LIMIT ?: '',
+                    tags: params.TAGS ?: '',
+                    skippedTags: params.SKIPPED_TAGS ?: '',
+                    startAtTask: params.START_AT_TASK ?: '',
+                    checkMode: params.DRY_RUN
+                )
             }
         }
     }
