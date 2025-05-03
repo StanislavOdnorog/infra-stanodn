@@ -106,7 +106,7 @@ pipeline {
                     
                     ansiblePlaybook(
                         playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                        inventory: '${params.INVENTORY_FILE}',
+                        inventory: params.INVENTORY_FILE,
                         credentialsId: 'ansible-ssh-key',
                         disableHostKeyChecking: true,
                         colorized: true,
