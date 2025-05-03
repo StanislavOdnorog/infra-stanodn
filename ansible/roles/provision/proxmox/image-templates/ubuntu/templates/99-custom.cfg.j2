@@ -1,7 +1,6 @@
 #cloud-config
 # System Information
-hostname: ${hostname}
-fqdn: ${hostname}.{{ cloud_init_search_domains[0] }}
+hostname: ubuntu-template
 manage_etc_hosts: true
 
 # User Configuration
@@ -10,7 +9,6 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     lock_passwd: false
-    passwd: {{ cloud_init_password | password_hash('sha512') }}
     ssh_authorized_keys:
       - {{ cloud_init_ssh_key }}
 
@@ -39,7 +37,6 @@ network:
       dhcp6: false
       nameservers:
         addresses: {{ cloud_init_dns_servers }}
-        search: {{ cloud_init_search_domains }}
 
 # System Configuration
 timezone: UTC

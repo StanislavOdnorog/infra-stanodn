@@ -39,16 +39,6 @@ pipeline {
             defaultValue: '',
             description: 'Only run tasks with these tags (optional)'
         )
-        string(
-            name: 'SKIPPED_TAGS',
-            defaultValue: '',
-            description: 'Skip tasks with these tags (optional)'
-        )
-        string(
-            name: 'START_AT_TASK',
-            defaultValue: '',
-            description: 'Start execution at this task (optional)'
-        )
     }
 
     options {
@@ -114,21 +104,25 @@ pipeline {
                 expression { params.PLAYBOOK != 'update_playbooks' }
             }   
             steps {
-                ansiblePlaybook(
-                    playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                    inventory: params.INVENTORY_FILE,
-                    credentialsId: 'ansible-ssh-key',
-                    disableHostKeyChecking: true,
-                    colorized: true,
-                    extraVars: [
-                        ansible_python_interpreter: '/usr/bin/python3'
-                    ],
-                    limit: params.LIMIT ?: '',
-                    tags: params.TAGS ?: '',
-                    skippedTags: params.SKIPPED_TAGS ?: '',
-                    startAtTask: params.START_AT_TASK ?: '',
-                    checkMode: params.DRY_RUN
-                )
+                withCredentials([
+                    string(credentialsId: 'ansible-ssh-key-pub', variable: 'ANSIBLE_SSH_KEY_PUB')
+                ]) {
+                    withEnv(['ANSIBLE_SSH_KEY_PUB=' + env.ANSIBLE_SSH_KEY_PUB]) {
+                        ansiblePlaybook(
+                            playbook: "ansible/playbooks/${params.PLAYBOOK}",
+                            inventory: params.INVENTORY_FILE,
+                            credentialsId: 'ansible-ssh-key',
+                            disableHostKeyChecking: true,
+                            colorized: true,
+                            extraVars: [
+                                ansible_python_interpreter: '/usr/bin/python3'
+                            ],
+                            limit: params.LIMIT ?: '',
+                            tags: params.TAGS ?: '',
+                            checkMode: params.DRY_RUN
+                        )
+                    }
+                }
             }
         }
     }

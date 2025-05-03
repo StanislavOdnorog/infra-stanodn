@@ -3,11 +3,19 @@
   hosts: proxmox-cluster
   become: yes
   vars_files:
-    - ../../../vars/proxmox.yml
-    - ../../../vars/ubuntu.yml
-  roles:
-    - role: provision/proxmox/image-templates/ubuntu
-      tags: 
-        - template
-        - ubuntu
-        - proxmox
+    - ../group_vars/all.yml
+    - ../group_vars/vault.yml
+  tasks:
+    - name: Create Ubuntu Template
+      block:
+        - name: Set is_present to false
+          set_fact:
+            is_present: true
+
+        - name: Create Ubuntu Template
+          include_role:
+            name: ../roles/provision/proxmox/image-templates/ubuntu
+          tags:
+            - template
+            - ubuntu
+            - proxmox
