@@ -67,12 +67,6 @@ pipeline {
             }
         }
 
-        stage('Prepare Inventory') {
-            steps {
-                writeFile file: 'ansible/hosts.ini', text: readFile(credentials('ansible-inventory'))
-            }
-        }
-
         stage('Update Playbooks List') {
             when {
                 expression { params.PLAYBOOK == 'update_playbooks' }
@@ -107,21 +101,26 @@ pipeline {
                 expression { params.PLAYBOOK != 'update_playbooks' }
             }
             steps {
-                ansiblePlaybook(
-                    playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                    inventory: params.INVENTORY_FILE ?: '',
-                    credentialsId: 'ansible-ssh-key',
-                    disableHostKeyChecking: true,
-                    colorized: true,
+                withCredentials([file(
+                    credentialsId: 'ansible-inventory',
+                    variable: 'INVENTORY_FILE'
+                )]) {
+                    ansiblePlaybook(
+                        playbook: "ansible/playbooks/${params.PLAYBOOK}",
+                        inventory: params.INVENTORY_FILE ?: '',
+                        credentialsId: 'ansible-ssh-key',
+                        disableHostKeyChecking: true,
+                        colorized: true,
                     extraVars: [
                         ansible_python_interpreter: '/usr/bin/python3'
                     ],
-                    limit: params.LIMIT ?: '',
-                    tags: params.TAGS ?: '',
-                    skippedTags: params.SKIPPED_TAGS ?: '',
-                    startAtTask: params.START_AT_TASK ?: '',
-                    checkMode: params.DRY_RUN
-                )
+                        limit: params.LIMIT ?: '',
+                        tags: params.TAGS ?: '',
+                        skippedTags: params.SKIPPED_TAGS ?: '',
+                        startAtTask: params.START_AT_TASK ?: '',
+                        checkMode: params.DRY_RUN
+                    )
+                }
             }
         }
     }
