@@ -7,18 +7,6 @@ image_url: "https://cloud-images.ubuntu.com/{{ ubuntu_release }}/current/{{ ubun
 image_name: "ubuntu-{{ ubuntu_release }}-server-cloudimg-{{ ubuntu_arch }}.img"
 
 # Proxmox Configuration
-storage_name: "local-lvm"
+storage_name: "data-2"
 vm_id: "{{ vm_prefix_id + 10 }}"
 template_name: "ubuntu-{{ ubuntu_release }}-template"
-vm_cores: 1
-vm_memory: 1024
-vm_balloon: 512
-vm_net_model: "virtio"
-vm_net_bridge: "vmbr0"
-
-# Cloud-Init Configuration
-cloud_init_user: "infra"
-cloud_init_ssh_key: "{{ lookup('env', 'ANSIBLE_SSH_KEY_PUB') }}"
-cloud_init_dns_servers:
-  - "8.8.8.8"
-  - "8.8.4.4"

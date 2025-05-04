@@ -9,7 +9,6 @@
     msg: "Storage {{ storage_name }} is not available"
   when: storage_name not in storage_check.stdout
 
-# Installation and configuration
 - name: Install required packages
   apt:
     name: 
@@ -18,140 +17,57 @@
     state: present
     update_cache: yes
 
-- name: Create temporary directory
-  file:
-    path: /tmp/ubuntu-template
-    state: directory
-    mode: '0755'
-
-- name: Check if image already exists
-  stat:
-    path: "/tmp/ubuntu-template/{{ image_name }}"
-  register: image_file
-
 - name: Download Ubuntu Cloud Image
   get_url:
     url: "{{ image_url }}"
-    dest: "/tmp/ubuntu-template/{{ image_name }}"
+    dest: "/tmp/{{ image_name }}"
     mode: '0644'
-    checksum: "{{ image_checksum | default(omit) }}"
-  register: download_result
-  when: not image_file.stat.exists
-
-- name: Verify image download
-  fail:
-    msg: "Failed to download Ubuntu image"
-  when: download_result is failed
 
 - name: Install qemu-guest-agent in the image
-  command: >
-    virt-customize -a "/tmp/ubuntu-template/{{ image_name }}"
-    --install qemu-guest-agent
-  register: guest_agent_result
+  command: virt-customize -a "/tmp/{{ image_name }}" --install qemu-guest-agent
 
-- name: Verify guest agent installation
-  fail:
-    msg: "Failed to install qemu-guest-agent"
-  when: guest_agent_result is failed
-
-- name: Upload Cloud-Init configuration
+- name: Upload Cloud-Init configuration on Machine
   template:
     src: 99-custom.cfg.j2
-    dest: "/tmp/ubuntu-template/99-custom.cfg"
-    mode: '0644'
+    dest: "/tmp/99-custom.cfg"
 
-- name: Upload Cloud-Init configuration to image
+- name: Upload Cloud-Init configuration
   command: >
-    virt-customize -a "/tmp/ubuntu-template/{{ image_name }}"
-    --upload /tmp/ubuntu-template/99-custom.cfg:/etc/cloud/cloud.cfg.d/99-custom.cfg
-  register: cloud_init_result
-
-- name: Verify Cloud-Init configuration
-  fail:
-    msg: "Failed to configure Cloud-Init"
-  when: cloud_init_result is failed
+    virt-customize -a "/tmp/{{ image_name }}"
+    --upload /tmp/99-custom.cfg:/etc/cloud/cloud.cfg.d/99-custom.cfg
 
 - name: Clear machine-id in the image
-  command: >
-    virt-customize -a "/tmp/ubuntu-template/{{ image_name }}"
-    --run-command "echo -n > /etc/machine-id"
-  register: machine_id_result
+  command: virt-customize -a "/tmp/{{ image_name }}" --run-command "echo -n > /etc/machine-id"
 
-- name: Verify machine-id clearing
-  fail:
-    msg: "Failed to clear machine-id"
-  when: machine_id_result is failed
-
-- name: Create Proxmox VM
-  command: >
-    qm create {{ vm_id }}
-    --name "{{ template_name }}-{{ inventory_hostname }}"
-    --cores {{ vm_cores }}
-    --memory {{ vm_memory }}
-    --balloon {{ vm_balloon }}
-    --net0 virtio,bridge={{ vm_net_bridge }}
-  register: vm_create_result
-
-- name: Verify VM creation
-  fail:
-    msg: "Failed to create VM"
-  when: vm_create_result is failed
+- name: Create Proxmox VM configuration file
+  file:
+    path: "/etc/pve/nodes/{{ inventory_hostname }}/qemu-server/{{ vm_id }}.conf"
+    state: touch
 
 - name: Import disk to Proxmox storage
-  command: >
-    qm importdisk {{ vm_id }}
-    "/tmp/ubuntu-template/{{ image_name }}"
-    {{ storage_name }}
-  register: import_result
+  command: qm importdisk {{ vm_id }} /tmp/{{ image_name }} {{ storage_name }}
 
-- name: Verify disk import
-  fail:
-    msg: "Failed to import disk to Proxmox storage"
-  when: import_result is failed
+- name: Set VM SCSI hardware and disk
+  command: qm set {{ vm_id }} --scsihw virtio-scsi-pci --scsi0 {{ storage_name }}:vm-{{ vm_id }}-disk-0
 
-# Configure VM hardware
-- name: Set VM configuration
-  block:
-    - name: Set VM SCSI hardware and disk
-      command: >
-        qm set {{ vm_id }}
-        --scsihw virtio-scsi-pci
-        --scsi0 {{ storage_name }}:vm-{{ vm_id }}-disk-0
+- name: Set Cloud-Init drive
+  command: qm set {{ vm_id }} --ide2 {{ storage_name }}:cloudinit
 
-    - name: Set Cloud-Init drive
-      command: >
-        qm set {{ vm_id }}
-        --ide2 {{ storage_name }}:cloudinit
+- name: Set boot options
+  command: qm set {{ vm_id }} --boot c --bootdisk scsi0
 
-    - name: Set boot options
-      command: >
-        qm set {{ vm_id }}
-        --boot c
-        --bootdisk scsi0
+- name: Configure serial and VGA
+  command: qm set {{ vm_id }} --serial0 socket --vga serial0
 
-    - name: Configure serial and VGA
-      command: >
-        qm set {{ vm_id }}
-        --serial0 socket
-        --vga serial0
-
-    - name: Enable QEMU guest agent
-      command: >
-        qm set {{ vm_id }}
-        --agent enabled=1
+- name: Enable QEMU guest agent
+  command: qm set {{ vm_id }} --agent enabled=1
 
 - name: Convert VM to template
   command: qm template {{ vm_id }}
-  register: template_result
 
-- name: Verify template conversion
-  fail:
-    msg: "Failed to convert VM to template"
-  when: template_result is failed
+- name: Rename the template
+  command: qm set {{ vm_id }} --name {{ template_name }}
 
-# Cleanup
-- name: Clean up temporary files
-  file:
-    path: "/tmp/ubuntu-template"
-    state: absent
-  ignore_errors: yes 
+- name: Wait for 60 seconds before proceeding
+  pause:
+    seconds: 60 
