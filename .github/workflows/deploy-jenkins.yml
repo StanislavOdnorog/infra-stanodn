@@ -1,4 +1,4 @@
-name: Deploy Reverse Proxy
+name: Deploy Jenkins
 
 on:
   push:
@@ -15,36 +15,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create deployment directory
-        uses: appleboy/ssh-action@master
+      - name: Deploy Jenkins
+        uses: ./.github/actions/deploy-docker-compose
         with:
-          host: ${{ secrets.JENKINS_SERVER_HOST }}
-          username: ${{ secrets.JENKINS_SERVER_USERNAME }}
-          port: ${{ secrets.JENKINS_SERVER_PORT }}
-          key: ${{ secrets.JENKINS_SERVER_SSH_KEY }}
-          script: |
-            mkdir -p jenkins
-            chmod 755 jenkins
-
-      - name: Deploy files
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.JENKINS_SERVER_HOST }}
-          username: ${{ secrets.JENKINS_SERVER_USERNAME }}
-          port: ${{ secrets.JENKINS_SERVER_PORT }}
-          key: ${{ secrets.JENKINS_SERVER_SSH_KEY }}
-          source: "jenkins/"
-          target: "jenkins"
-          strip_components: 1
-
-      - name: Start/Update services
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.JENKINS_SERVER_HOST }}
-          username: ${{ secrets.JENKINS_SERVER_USERNAME }}
-          port: ${{ secrets.JENKINS_SERVER_PORT }}
-          key: ${{ secrets.JENKINS_SERVER_SSH_KEY }}
-          script: |
-            cd jenkins
-            docker-compose down
-            docker-compose up -d 
+          server_host: ${{ secrets.JENKINS_SERVER_HOST }}
+          server_username: ${{ secrets.JENKINS_SERVER_USERNAME }}
+          server_port: ${{ secrets.JENKINS_SERVER_PORT }}
+          server_ssh_key: ${{ secrets.JENKINS_SERVER_SSH_KEY }}
+          service_name: 'jenkins'
+          source_path: 'jenkins'

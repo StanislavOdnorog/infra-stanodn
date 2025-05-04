@@ -1,0 +1,59 @@
+name: 'Deploy Docker Compose Service'
+description: 'Deploy a Docker Compose service to a remote server'
+
+inputs:
+  server_host:
+    description: 'Remote server host'
+    required: true
+  server_username:
+    description: 'Remote server username'
+    required: true
+  server_port:
+    description: 'Remote server SSH port'
+    required: true
+  server_ssh_key:
+    description: 'SSH key for remote server'
+    required: true
+  service_name:
+    description: 'Name of the service to deploy'
+    required: true
+  source_path:
+    description: 'Source path of the service files'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create deployment directory
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ inputs.server_host }}
+        username: ${{ inputs.server_username }}
+        port: ${{ inputs.server_port }}
+        key: ${{ inputs.server_ssh_key }}
+        script: |
+          mkdir -p ${{ inputs.service_name }}
+          chmod 755 ${{ inputs.service_name }}
+
+    - name: Deploy files
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ inputs.server_host }}
+        username: ${{ inputs.server_username }}
+        port: ${{ inputs.server_port }}
+        key: ${{ inputs.server_ssh_key }}
+        source: "${{ inputs.source_path }}/"
+        target: "${{ inputs.service_name }}"
+        strip_components: 1
+
+    - name: Start/Update services
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ inputs.server_host }}
+        username: ${{ inputs.server_username }}
+        port: ${{ inputs.server_port }}
+        key: ${{ inputs.server_ssh_key }}
+        script: |
+          cd ${{ inputs.service_name }}
+          docker-compose down
+          docker-compose up -d 
