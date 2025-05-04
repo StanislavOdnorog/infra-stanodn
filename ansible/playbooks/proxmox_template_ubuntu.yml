@@ -10,7 +10,7 @@
       block:
         - name: Set is_present to false
           set_fact:
-            is_present: true
+            is_present: delete
 
         - name: Create Ubuntu Template
           include_role:
