@@ -39,6 +39,13 @@ pipeline {
             defaultValue: '',
             description: 'Only run tasks with these tags (optional)'
         )
+        text(
+            name: 'EXTRA_VARS',
+            defaultValue: '''var1=value1
+var2=value2
+var3=value3''',
+            description: 'Extra variables to pass to the playbook (one per line, format: key=value)'
+        )
     }
 
     options {
@@ -108,19 +115,30 @@ pipeline {
                     string(credentialsId: 'ansible-ssh-key-pub', variable: 'ANSIBLE_SSH_KEY_PUB')
                 ]) {
                     withEnv(['ANSIBLE_SSH_KEY_PUB=' + env.ANSIBLE_SSH_KEY_PUB]) {
-                        ansiblePlaybook(
-                            playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                            inventory: params.INVENTORY_FILE,
-                            credentialsId: 'ansible-ssh-key',
-                            disableHostKeyChecking: true,
-                            colorized: true,
-                            extraVars: [
-                                ansible_python_interpreter: '/usr/bin/python3'
-                            ],
-                            limit: params.LIMIT ?: '',
-                            tags: params.TAGS ?: '',
-                            checkMode: params.DRY_RUN
-                        )
+                        script {
+                            def extraVars = [ansible_python_interpreter: '/usr/bin/python3']
+                            
+                            if (params.EXTRA_VARS?.trim()) {
+                                params.EXTRA_VARS.split('\n').each { line ->
+                                    if (line.contains('=')) {
+                                        def parts = line.split('=', 2)
+                                        extraVars[parts[0].trim()] = parts[1].trim()
+                                    }
+                                }
+                            }
+                            
+                            ansiblePlaybook(
+                                playbook: "ansible/playbooks/${params.PLAYBOOK}",
+                                inventory: params.INVENTORY_FILE,
+                                credentialsId: 'ansible-ssh-key',
+                                disableHostKeyChecking: true,
+                                colorized: true,
+                                extraVars: extraVars,
+                                limit: params.LIMIT ?: '',
+                                tags: params.TAGS ?: '',
+                                checkMode: params.DRY_RUN
+                            )
+                        }
                     }
                 }
             }
