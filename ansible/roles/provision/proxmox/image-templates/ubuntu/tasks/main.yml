@@ -7,10 +7,6 @@
   failed_when: false
   become: yes
 
-- name: Debug template_check
-  debug:
-    var: template_check
-
 - name: Create template if is_present is true
   include_tasks: create-template.yml
   when: is_present and template_check.rc != 0
