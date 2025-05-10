@@ -3,6 +3,7 @@ services:
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
+    env_file: ".env"
     environment:
       - ServerIP=${SERVER_IP}
       - TZ=${TZ}
