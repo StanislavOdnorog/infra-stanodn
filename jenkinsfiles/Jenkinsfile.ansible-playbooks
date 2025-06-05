@@ -1,11 +1,34 @@
 def playbookChoices = []
+def targetChoices = ['all']
 node {
     checkout scm
     def playbooks = sh(returnStdout: true, script: "find ansible/playbooks/ | grep .yml 2>/dev/null || true")
     playbooks.split().each { playbook ->
         playbookChoices << playbook.replace('ansible/playbooks/', '')
     }
-    playbookChoices.add(0, 'update_playbooks')
+    playbookChoices.add(0, 'Update Inventory and Playbooks List')
+    
+    // Read inventory content directly from credentials to populate target choices
+    try {
+        withCredentials([file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT')]) {
+            def inventoryContent = readFile(env.INVENTORY_CONTENT)
+            inventoryContent.split('\n').each { line ->
+                line = line.trim()
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    def group = line.replaceAll(/[\[\]]/, '')
+                    if (group != 'all:vars' && !group.contains(':')) {
+                        targetChoices << group
+                    }
+                } else if (line && !line.startsWith('#') && !line.startsWith(';') && line.contains('ansible_host=')) {
+                    def host = line.split()[0]
+                    if (host) targetChoices << host
+                }
+            }
+        }
+    } catch (Exception e) {
+        echo "Could not read inventory for target choices: ${e.message}"
+    }
+    targetChoices = targetChoices.unique()
 }
 
 pipeline {
@@ -17,12 +40,12 @@ pipeline {
         choice(
             name: 'PLAYBOOK',
             choices: playbookChoices,
-            description: 'Select playbook to run or update_playbooks to refresh the list'
+            description: 'Select playbook to run or Update to refresh the inventory and playbooks list'
         )
-        string(
+        choice(
             name: 'TARGET',
-            defaultValue: 'all',
-            description: 'Target host or group (e.g. ai-server, custom-vms, proxmox-cluster, all)'
+            choices: targetChoices,
+            description: 'Select target host or group'
         )
         booleanParam(
             name: 'DRY_RUN',
@@ -72,9 +95,9 @@ var3=value3''',
             }
         }
 
-        stage('Update Playbooks List') {
+        stage('Update Inventory and Playbooks List') {
             when {
-                expression { params.PLAYBOOK == 'update_playbooks' }
+                expression { params.PLAYBOOK == 'Update Inventory and Playbooks List' }
             }
             steps {
                 echo '✅ Playbook list updated successfully!'
@@ -83,7 +106,7 @@ var3=value3''',
 
         stage('Validate Playbook') {
             when {
-                expression { params.PLAYBOOK != 'update_playbooks' }
+                expression { params.PLAYBOOK != 'Update Inventory and Playbooks List' }
             }
             steps {
                 script {
@@ -103,7 +126,7 @@ var3=value3''',
 
         stage('Run Ansible Playbook') {
             when {
-                expression { params.PLAYBOOK != 'update_playbooks' }
+                expression { params.PLAYBOOK != 'Update Inventory and Playbooks List' }
             }   
             steps {
                 withCredentials([
