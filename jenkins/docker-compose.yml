@@ -11,6 +11,7 @@ services:
       - jenkins_home:/var/jenkins_home
     networks:
       - jenkins-network
+    restart: always
 
   jenkins-agent:
     build:
@@ -27,7 +28,8 @@ services:
       - jenkins
     networks:
       - jenkins-network
-
+    restart: always
+    
 volumes:
   jenkins_home:
   agent_workdir:
