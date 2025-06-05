@@ -252,15 +252,6 @@ findbig() {
     find . -size +${1:-100M} -type f -exec ls -lh {} \; | awk '{ print $NF ": " $5 }'
 }
 
-# Create a data URL from a file
-dataurl() {
-    local mimeType=$(file -b --mime-type "$1")
-    if [[ $mimeType == text/* ]]; then
-        mimeType="${mimeType};charset=utf-8"
-    fi
-    echo "data:${mimeType};base64,$(openssl base64 -in "$1" | tr -d '\n')"
-}
-
 # Get local IP address
 localip() {
     hostname -I | awk '{print $1}'
@@ -301,13 +292,9 @@ export VISUAL=${VISUAL:-nano}
 # =============================================================================
 
 echo -e "${GREEN}Welcome back, $(whoami)!${NC}"
-echo ""
 echo -e "${BLUE}Date: $(date)${NC}"
-echo ""
 echo -e "${YELLOW}System: $(uname -s) $(uname -r)${NC}"
-echo ""
 echo -e "${PURPLE}Memory: $(free -h | awk '/^Mem:/ {print $3 "/" $2}')${NC}"
-echo ""
 echo -e "${CYAN}Home: $HOME${NC}"
 echo ""
 
