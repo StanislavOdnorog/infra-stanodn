@@ -8,27 +8,68 @@ node {
     }
     playbookChoices.add(0, 'Update Inventory and Playbooks List')
     
-    // Read inventory content directly from credentials to populate target choices
+    // Use Ansible inventory JSON output to get ALL hosts and groups
     try {
         withCredentials([file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT')]) {
-            def inventoryContent = readFile(env.INVENTORY_CONTENT)
-            inventoryContent.split('\n').each { line ->
-                line = line.trim()
-                if (line.startsWith('[') && line.endsWith(']')) {
-                    def group = line.replaceAll(/[\[\]]/, '')
-                    if (group != 'all:vars' && !group.contains(':')) {
-                        targetChoices << group
+            writeFile file: 'temp_hosts.ini', text: readFile(env.INVENTORY_CONTENT)
+            
+            // Get all hosts - comprehensive method
+            def hostsOutput = sh(returnStdout: true, script: """
+                ansible-inventory -i temp_hosts.ini --list-hosts all 2>/dev/null | \
+                grep -v '^\\s*hosts (' | grep -v '^\\s*\\[' | \
+                grep -v '^\\s*$' | sed 's/^\\s*//' || true
+            """).trim()
+            
+            if (hostsOutput) {
+                hostsOutput.split('\n').each { line ->
+                    line = line.trim()
+                    if (line && line != 'all') {
+                        targetChoices << line
                     }
-                } else if (line && !line.startsWith('#') && !line.startsWith(';') && line.contains('ansible_host=')) {
-                    def host = line.split()[0]
-                    if (host) targetChoices << host
                 }
             }
+            
+            // Get all groups using JSON output - most comprehensive
+            def jsonOutput = sh(returnStdout: true, script: """
+                ansible-inventory -i temp_hosts.ini --list 2>/dev/null || echo '{}'
+            """).trim()
+            
+            if (jsonOutput && jsonOutput != '{}') {
+                try {
+                    def inventory = readJSON text: jsonOutput
+                    inventory.keySet().each { key ->
+                        if (key != 'all' && key != '_meta' && key != 'ungrouped') {
+                            targetChoices << key
+                        }
+                    }
+                } catch (Exception jsonError) {
+                    echo "JSON parsing failed, using fallback method: ${jsonError.message}"
+                    
+                    // Fallback: parse groups from --graph output
+                    def graphOutput = sh(returnStdout: true, script: """
+                        ansible-inventory -i temp_hosts.ini --graph 2>/dev/null | \
+                        grep '@' | sed 's/^[^@]*@\\([^:]*\\):.*/\\1/' || true
+                    """).trim()
+                    
+                    if (graphOutput) {
+                        graphOutput.split('\n').each { line ->
+                            line = line.trim()
+                            if (line && line != 'all' && line != 'ungrouped') {
+                                targetChoices << line
+                            }
+                        }
+                    }
+                }
+            }
+            
+            sh "rm -f temp_hosts.ini"
         }
     } catch (Exception e) {
         echo "Could not read inventory for target choices: ${e.message}"
+        // Fallback: add some common targets
+        targetChoices.addAll(['proxmox-cluster', 'custom-vms'])
     }
-    targetChoices = targetChoices.unique()
+    targetChoices = targetChoices.unique().sort()
 }
 
 pipeline {
@@ -100,7 +141,17 @@ var3=value3''',
                 expression { params.PLAYBOOK == 'Update Inventory and Playbooks List' }
             }
             steps {
-                echo '✅ Playbook list updated successfully!'
+                echo '✅ Inventory and Playbook list updated successfully!'
+                script {
+                    // Show current inventory for debugging
+                    echo "=== INVENTORY GRAPH ==="
+                    sh "ansible-inventory -i ansible/hosts.ini --graph || true"
+                    echo "=== ALL HOSTS ==="
+                    sh "ansible-inventory -i ansible/hosts.ini --list-hosts all || true"
+                    echo "=== ALL GROUPS (JSON) ==="
+                    sh "ansible-inventory -i ansible/hosts.ini --list | jq 'keys[]' 2>/dev/null || echo 'jq not available, showing raw JSON:'"
+                    sh "ansible-inventory -i ansible/hosts.ini --list || true"
+                }
             }
         }
 
