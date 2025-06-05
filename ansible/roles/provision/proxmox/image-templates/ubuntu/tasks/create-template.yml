@@ -72,13 +72,26 @@
 - name: Configure network interface
   command: qm set {{ vm_id }} --net0 virtio,bridge={{ vm_net_bridge }},firewall=0
 
+- name: Create temporary SSH key file for cloud-init
+  copy:
+    content: "{{ cloud_init_ssh_key }}"
+    dest: "/tmp/ssh_key_{{ vm_id }}.pub"
+    mode: '0644'
+  when: cloud_init_ssh_key is defined and cloud_init_ssh_key != ""
+
 - name: Configure Cloud-Init settings in template
   command: >
     qm set {{ vm_id }}
     --ciuser {{ cloud_init_user }}
-    --sshkeys {{ cloud_init_ssh_key | urlencode }}
+    --sshkeys /tmp/ssh_key_{{ vm_id }}.pub
     --nameserver "8.8.8.8 8.8.4.4"
     --ipconfig0 "dhcp"
+  when: cloud_init_ssh_key is defined and cloud_init_ssh_key != ""
+
+- name: Remove temporary SSH key file
+  file:
+    path: "/tmp/ssh_key_{{ vm_id }}.pub"
+    state: absent
   when: cloud_init_ssh_key is defined and cloud_init_ssh_key != ""
 
 - name: Convert VM to template
