@@ -4,8 +4,6 @@
   become: yes
   vars_files:
     - ../group_vars/all.yml
-    - ../group_vars/vault.yml
-    - ../group_vars/cloud_init.yml
   tasks:
     - name: Create Ubuntu Template
       block:
