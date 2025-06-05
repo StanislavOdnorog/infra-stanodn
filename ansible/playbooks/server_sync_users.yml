@@ -5,4 +5,4 @@
   vars_files:
     - ../group_vars/users.yml
   roles:
-    - users
+    - ../roles/configure/sync_users
