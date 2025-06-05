@@ -24,7 +24,9 @@
     mode: '0644'
 
 - name: Install qemu-guest-agent in the image
-  command: virt-customize -a "/tmp/{{ image_name }}" --install qemu-guest-agent
+  command: >
+    virt-customize -a "/tmp/{{ image_name }}"
+    --run-command "apt-get update && apt-get install -y qemu-guest-agent"
 
 - name: Upload Cloud-Init configuration on Machine
   template:
