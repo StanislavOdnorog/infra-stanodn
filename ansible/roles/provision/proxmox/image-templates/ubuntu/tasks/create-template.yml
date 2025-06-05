@@ -36,6 +36,11 @@
     virt-customize -a "/tmp/{{ image_name }}"
     --upload /tmp/99-custom.cfg:/etc/cloud/cloud.cfg.d/99-custom.cfg
 
+- name: Create systemd network timeout override
+  command: >
+    virt-customize -a "/tmp/{{ image_name }}"
+    --run-command "mkdir -p /etc/systemd/system/systemd-networkd-wait-online.service.d/ && echo -e '[Service]\nTimeoutStartSec=180' > /etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf"
+
 - name: Clear machine-id in the image
   command: virt-customize -a "/tmp/{{ image_name }}" --run-command "echo -n > /etc/machine-id"
 
@@ -61,6 +66,9 @@
 
 - name: Enable QEMU guest agent
   command: qm set {{ vm_id }} --agent enabled=1
+
+- name: Configure network interface
+  command: qm set {{ vm_id }} --net0 virtio,bridge={{ vm_net_bridge }},firewall=0
 
 - name: Convert VM to template
   command: qm template {{ vm_id }}

@@ -9,4 +9,5 @@ image_name: "ubuntu-{{ ubuntu_release }}-server-cloudimg-{{ ubuntu_arch }}.img"
 # Proxmox Configuration
 storage_name: "data-2"
 vm_id: "{{ vm_prefix_id + 10 }}"
+vm_net_bridge: "vmbr0"
 template_name: "ubuntu-{{ ubuntu_release }}-template"

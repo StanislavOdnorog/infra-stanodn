@@ -1,3 +1,63 @@
+#cloud-config
+# System Information
+hostname: ubuntu-template
+manage_etc_hosts: true
+
+# User Configuration
+users:
+  - name: {{ cloud_init_user }}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: false
+    ssh_authorized_keys:
+      - {{ cloud_init_ssh_key }}
+
+# Package Configuration
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+packages:
+  - qemu-guest-agent
+  - curl
+  - wget
+  - git
+  - vim
+  - htop
+  - net-tools
+  - dnsutils
+  - ufw
+  - fail2ban
+
+# Network Configuration
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: true
+      dhcp6: false
+      match:
+        name: en*
+      set-name: eth0
+      optional: false
+      dhcp4-overrides:
+        use-dns: true
+        use-domains: true
+        route-metric: 100
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+
+# System Configuration
+timezone: UTC
+locale: en_US.UTF-8
+keyboard:
+  layout: us
+  variant: ""
+
+# Security Configuration
+ssh_pwauth: false
+disable_root: true
+
+# Final Configuration
 power_state:
   mode: reboot
   delay: 1
