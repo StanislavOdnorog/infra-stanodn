@@ -101,17 +101,17 @@ parse_git_branch() {
 show_exit_code() {
     local exit_code=$?
     if [ $exit_code != 0 ]; then
-        echo " ❌ $exit_code"
+        echo " [EXIT:$exit_code]"
     fi
 }
 
-# Cool prompt with git branch, exit status, and emojis
+# Cool prompt with git branch and exit status
 if [[ $EUID == 0 ]]; then
     # Root user prompt (red)
-    PS1='\[\e[0;31m\]👑 \u\[\e[0m\]@\[\e[0;33m\]\h\[\e[0m\]:\[\e[0;34m\]\w\[\e[0;35m\]$(parse_git_branch)\[\e[0;31m\]$(show_exit_code)\[\e[0m\]\n🔥 '
+    PS1='\[\e[0;31m\]\u\[\e[0m\]@\[\e[0;33m\]\h\[\e[0m\]:\[\e[0;34m\]\w\[\e[0;35m\]$(parse_git_branch)\[\e[0;31m\]$(show_exit_code)\[\e[0m\]\n# '
 else
     # Regular user prompt (green)
-    PS1='\[\e[0;32m\]🚀 \u\[\e[0m\]@\[\e[0;33m\]\h\[\e[0m\]:\[\e[0;34m\]\w\[\e[0;35m\]$(parse_git_branch)\[\e[0;31m\]$(show_exit_code)\[\e[0m\]\n💻 '
+    PS1='\[\e[0;32m\]\u\[\e[0m\]@\[\e[0;33m\]\h\[\e[0m\]:\[\e[0;34m\]\w\[\e[0;35m\]$(parse_git_branch)\[\e[0;31m\]$(show_exit_code)\[\e[0m\]\n$ '
 fi
 
 # =============================================================================
@@ -273,10 +273,10 @@ killall_by_name() {
 
 # Docker cleanup
 docker_cleanup() {
-    echo "🧹 Cleaning up Docker..."
+    echo "Cleaning up Docker..."
     docker system prune -af
     docker volume prune -f
-    echo "✅ Docker cleanup complete!"
+    echo "Docker cleanup complete!"
 }
 
 # =============================================================================
@@ -300,16 +300,23 @@ export VISUAL=${VISUAL:-nano}
 # WELCOME MESSAGE
 # =============================================================================
 
-echo -e "${GREEN}🌟 Welcome back, $(whoami)! 🌟${NC}"
-echo -e "${BLUE}📅 $(date)${NC}"
-echo -e "${YELLOW}🖥️  System: $(uname -s) $(uname -r)${NC}"
-echo -e "${PURPLE}💾 Memory: $(free -h | awk '/^Mem:/ {print $3 "/" $2}')${NC}"
-echo -e "${CYAN}🏠 Home: $HOME${NC}"
+echo -e "${GREEN}Welcome back, $(whoami)!${NC}"
+echo ""
+echo -e "${BLUE}Date: $(date)${NC}"
+echo ""
+echo -e "${YELLOW}System: $(uname -s) $(uname -r)${NC}"
+echo ""
+echo -e "${PURPLE}Memory: $(free -h | awk '/^Mem:/ {print $3 "/" $2}')${NC}"
+echo ""
+echo -e "${CYAN}Home: $HOME${NC}"
+echo ""
 
 # Show git status if in a git repository
 if git rev-parse --is-inside-work-tree &>/dev/null; then
-    echo -e "${GREEN}📁 Git repository detected!${NC}"
+    echo -e "${GREEN}Git repository detected!${NC}"
+    echo ""
     git status --short
+    echo ""
 fi
 
 echo ""
