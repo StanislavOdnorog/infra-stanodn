@@ -1,0 +1,29 @@
+---
+- name: Ensure docker group exists
+  ansible.builtin.group:
+    name: docker
+    state: present
+
+- name: Add present users to docker group
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    groups: docker
+    append: yes
+  loop: "{{ present_users | default([]) }}"
+
+- name: Configure sudo without password for present users
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/{{ item.name }}
+    line: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL"
+    create: yes
+    owner: root
+    group: root
+    mode: '0440'
+    validate: 'visudo -cf %s'
+  loop: "{{ present_users | default([]) }}"
+
+- name: Ensure sudoers.d files for absent users are removed
+  ansible.builtin.file:
+    path: /etc/sudoers.d/{{ item }}
+    state: absent
+  loop: "{{ absent_users | default([]) }}" 

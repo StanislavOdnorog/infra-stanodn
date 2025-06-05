@@ -23,6 +23,9 @@
     mode: '0644'
   loop: "{{ present_users | default([]) }}"
 
+- name: Configure docker and sudo access
+  ansible.builtin.include_tasks: docker_sudo.yml
+
 - name: Ensure absent users are absent
   ansible.builtin.user:
     name: "{{ item }}"
