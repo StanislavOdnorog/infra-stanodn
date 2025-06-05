@@ -14,4 +14,4 @@ template_name: "ubuntu-{{ ubuntu_release }}-template"
 
 # Cloud-init configuration
 cloud_init_user: "{{ ansible_user }}"
-cloud_init_ssh_key: "{{ lookup('env', 'ANSIBLE_SSH_KEY_PUB') | default('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILX/i0kRRBfTVWShb/meARITwMeTYXSikWeQGouu8F8U ansible-jenkins') }}" 
+cloud_init_ssh_key: "{{ lookup('env', 'ANSIBLE_SSH_KEY_PUB') }}" 
