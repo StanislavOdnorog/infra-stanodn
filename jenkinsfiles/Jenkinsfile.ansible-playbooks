@@ -13,23 +13,7 @@ node {
         withCredentials([file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT')]) {
             writeFile file: 'temp_hosts.ini', text: readFile(env.INVENTORY_CONTENT)
             
-            // Get all hosts - comprehensive method
-            def hostsOutput = sh(returnStdout: true, script: '''
-                ansible-inventory -i temp_hosts.ini --list-hosts all 2>/dev/null | \\
-                grep -v '^\\s*hosts (' | grep -v '^\\s*\\[' | \\
-                grep -v '^\\s*$' | sed 's/^\\s*//' || true
-            ''').trim()
-            
-            if (hostsOutput) {
-                hostsOutput.split('\n').each { line ->
-                    line = line.trim()
-                    if (line && line != 'all') {
-                        targetChoices << line
-                    }
-                }
-            }
-            
-            // Get all groups using JSON output - most comprehensive
+            // Get all groups and hosts using JSON output
             def jsonOutput = sh(returnStdout: true, script: '''
                 ansible-inventory -i temp_hosts.ini --list 2>/dev/null || echo '{}'
             ''').trim()
@@ -37,9 +21,18 @@ node {
             if (jsonOutput && jsonOutput != '{}') {
                 try {
                     def inventory = readJSON text: jsonOutput
+                    
+                    // Add all groups (top-level keys except _meta)
                     inventory.keySet().each { key ->
                         if (key != 'all' && key != '_meta' && key != 'ungrouped') {
                             targetChoices << key
+                        }
+                    }
+                    
+                    // Add all individual hosts from _meta.hostvars
+                    if (inventory._meta && inventory._meta.hostvars) {
+                        inventory._meta.hostvars.keySet().each { host ->
+                            targetChoices << host
                         }
                     }
                 } catch (Exception jsonError) {
@@ -146,10 +139,7 @@ var3=value3''',
                     // Show current inventory for debugging
                     echo "=== INVENTORY GRAPH ==="
                     sh "ansible-inventory -i ansible/hosts.ini --graph || true"
-                    echo "=== ALL HOSTS ==="
-                    sh "ansible-inventory -i ansible/hosts.ini --list-hosts all || true"
-                    echo "=== ALL GROUPS (JSON) ==="
-                    sh "ansible-inventory -i ansible/hosts.ini --list | jq 'keys[]' 2>/dev/null || echo 'jq not available, showing raw JSON:'"
+                    echo "=== JSON STRUCTURE ==="
                     sh "ansible-inventory -i ansible/hosts.ini --list || true"
                 }
             }
@@ -230,4 +220,5 @@ var3=value3''',
             echo '❌ Playbook execution failed!'
         }
     }
+} 
 } 
