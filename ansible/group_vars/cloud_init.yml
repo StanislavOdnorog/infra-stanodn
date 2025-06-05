@@ -1,0 +1,4 @@
+---
+# Cloud-init configuration
+cloud_init_user: "{{ ansible_user }}"
+cloud_init_ssh_key: "{{ lookup('env', 'ANSIBLE_SSH_KEY_PUB') | default(lookup('file', '~/.ssh/id_rsa.pub')) }}" 
