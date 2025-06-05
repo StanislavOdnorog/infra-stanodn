@@ -85,7 +85,7 @@
     --ciuser {{ cloud_init_user }}
     --sshkeys /tmp/ssh_key_{{ vm_id }}.pub
     --nameserver "8.8.8.8 8.8.4.4"
-    --ipconfig0 "dhcp"
+    --ipconfig0 "ip=dhcp"
   when: cloud_init_ssh_key is defined and cloud_init_ssh_key != ""
 
 - name: Remove temporary SSH key file
