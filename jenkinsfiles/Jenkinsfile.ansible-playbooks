@@ -1,5 +1,4 @@
 def playbookChoices = []
-def targetChoices = ['all']
 node {
     checkout scm
     def playbooks = sh(returnStdout: true, script: "find ansible/playbooks/ | grep .yml 2>/dev/null || true")
@@ -7,24 +6,6 @@ node {
         playbookChoices << playbook.replace('ansible/playbooks/', '')
     }
     playbookChoices.add(0, 'update_playbooks')
-    
-    // Try to read inventory file to get targets
-    if (fileExists('ansible/inventory/hosts.ini')) {
-        def inventoryContent = readFile('ansible/inventory/hosts.ini')
-        inventoryContent.split('\n').each { line ->
-            line = line.trim()
-            if (line.startsWith('[') && line.endsWith(']')) {
-                def group = line.replaceAll(/[\[\]]/, '')
-                if (group != 'all:vars' && !group.contains(':')) {
-                    targetChoices << group
-                }
-            } else if (line && !line.startsWith('#') && !line.startsWith(';') && line.contains('ansible_host=')) {
-                def host = line.split()[0]
-                if (host) targetChoices << host
-            }
-        }
-    }
-    targetChoices = targetChoices.unique()
 }
 
 pipeline {
@@ -38,10 +19,10 @@ pipeline {
             choices: playbookChoices,
             description: 'Select playbook to run or update_playbooks to refresh the list'
         )
-        choice(
+        string(
             name: 'TARGET',
-            choices: targetChoices,
-            description: 'Select target host or group'
+            defaultValue: 'all',
+            description: 'Target host or group (e.g. ai-server, custom-vms, proxmox-cluster, all)'
         )
         booleanParam(
             name: 'DRY_RUN',
