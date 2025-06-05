@@ -1,6 +1,6 @@
 ---
 - name: Create Ubuntu Template in Proxmox
-  hosts: proxmox-cluster
+  hosts: "{{ target }}"
   become: yes
   vars_files:
     - ../group_vars/all.yml

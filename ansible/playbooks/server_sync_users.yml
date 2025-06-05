@@ -1,8 +1,8 @@
 ---
 - name: Sync users and profiles
-  hosts: custom-vms
+  hosts: "{{ target }}"
   become: yes
   vars_files:
     - ../group_vars/users.yml
   roles:
-    - users 
+    - users

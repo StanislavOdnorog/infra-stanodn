@@ -1,4 +1,5 @@
 def playbookChoices = []
+def targetChoices = ['all']
 node {
     checkout scm
     def playbooks = sh(returnStdout: true, script: "find ansible/playbooks/ | grep .yml 2>/dev/null || true")
@@ -6,6 +7,24 @@ node {
         playbookChoices << playbook.replace('ansible/playbooks/', '')
     }
     playbookChoices.add(0, 'update_playbooks')
+    
+    // Try to read inventory file to get targets
+    if (fileExists('ansible/inventory/hosts.ini')) {
+        def inventoryContent = readFile('ansible/inventory/hosts.ini')
+        inventoryContent.split('\n').each { line ->
+            line = line.trim()
+            if (line.startsWith('[') && line.endsWith(']')) {
+                def group = line.replaceAll(/[\[\]]/, '')
+                if (group != 'all:vars' && !group.contains(':')) {
+                    targetChoices << group
+                }
+            } else if (line && !line.startsWith('#') && !line.startsWith(';') && line.contains('ansible_host=')) {
+                def host = line.split()[0]
+                if (host) targetChoices << host
+            }
+        }
+    }
+    targetChoices = targetChoices.unique()
 }
 
 pipeline {
@@ -19,20 +38,15 @@ pipeline {
             choices: playbookChoices,
             description: 'Select playbook to run or update_playbooks to refresh the list'
         )
-        string(
-            name: 'INVENTORY_FILE',
-            defaultValue: 'ansible/hosts.ini',
-            description: 'Path to inventory file (optional)'
+        choice(
+            name: 'TARGET',
+            choices: targetChoices,
+            description: 'Select target host or group'
         )
         booleanParam(
             name: 'DRY_RUN',
             defaultValue: false,
             description: 'Run in check mode (dry run)'
-        )
-        string(
-            name: 'LIMIT',
-            defaultValue: '',
-            description: 'Limit execution to specific hosts (optional)'
         )
         string(
             name: 'TAGS',
@@ -101,7 +115,7 @@ var3=value3''',
                 }
                 sh """
                     cd ansible
-                    ansible-playbook --syntax-check playbooks/${params.PLAYBOOK} ${params.INVENTORY_FILE ? "-i ${params.INVENTORY_FILE}" : ""}
+                    ansible-playbook --syntax-check playbooks/${params.PLAYBOOK} -i hosts.ini
                 """
             }
         }
@@ -116,7 +130,10 @@ var3=value3''',
                 ]) {
                     withEnv(['ANSIBLE_SSH_KEY_PUB=' + env.ANSIBLE_SSH_KEY_PUB]) {
                         script {
-                            def extraVars = [ansible_python_interpreter: '/usr/bin/python3']
+                            def extraVars = [
+                                ansible_python_interpreter: '/usr/bin/python3',
+                                target: params.TARGET
+                            ]
                             
                             if (params.EXTRA_VARS?.trim()) {
                                 params.EXTRA_VARS.split('\n').each { line ->
@@ -129,12 +146,11 @@ var3=value3''',
                             
                             ansiblePlaybook(
                                 playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                                inventory: params.INVENTORY_FILE,
+                                inventory: "ansible/hosts.ini",
                                 credentialsId: 'ansible-ssh-key',
                                 disableHostKeyChecking: true,
                                 colorized: true,
                                 extraVars: extraVars,
-                                limit: params.LIMIT ?: '',
                                 tags: params.TAGS ?: '',
                                 checkMode: params.DRY_RUN
                             )
@@ -149,7 +165,7 @@ var3=value3''',
         always {
             cleanWs()
             script {
-                currentBuild.description = "Playbook: ${params.PLAYBOOK}"
+                currentBuild.description = "Playbook: ${params.PLAYBOOK}, Target: ${params.TARGET}"
             }
         }
         success {
