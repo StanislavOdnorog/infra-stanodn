@@ -4,31 +4,58 @@ services:
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
+    hostname: pihole
     ports:
       - "53:53/tcp"
       - "53:53/udp"
       - "80:80/tcp"
-    environment:
-      TZ: '{{ PIHOLE_TIMEZONE }}'
-      WEBPASSWORD: '${PIHOLE_ADMIN_PASSWORD:-admin123}'
-      PIHOLE_DNS_: '1.1.1.1;8.8.8.8'
-      DNSMASQ_LISTENING: 'all'
-      PIHOLE_DOMAIN: '{{ PIHOLE_DOMAIN }}'
-      ServerIP: '{{ PIHOLE_SERVER_IP }}'
+      - "443:443/tcp"
+      - "67:67/udp"
+    env_file:
+      - .env
+      
     volumes:
-      - './config/pihole:/etc/pihole'
-      - './config/dnsmasq.d:/etc/dnsmasq.d'
+      - './config/etc-pihole:/etc/pihole'
       - './config/custom.list:/etc/pihole/custom.list'
+      - './logs:/var/log/pihole'
+      
+    cap_add:
+      - NET_BIND_SERVICE
+      - NET_RAW
+      - NET_ADMIN 
+      - SYS_NICE
+      - CHOWN
     dns:
       - 127.0.0.1
       - 1.1.1.1
       - 8.8.8.8
+    healthcheck:
+      test: ["CMD", "dig", "@127.0.0.1", "-p", "53", "pi.hole", "+short", "+time=5", "+tries=1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
     restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
+    
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    
+    security_opt:
+      - no-new-privileges:true
+    
     networks:
       - pihole-network
 
 networks:
   pihole-network:
-    driver: bridge 
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: pihole-br
