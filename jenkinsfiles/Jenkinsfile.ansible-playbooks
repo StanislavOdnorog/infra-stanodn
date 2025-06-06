@@ -8,58 +8,31 @@ node {
     }
     playbookChoices.add(0, 'Update Inventory and Playbooks List')
     
-    // Use Ansible inventory JSON output to get ALL hosts and groups
+    // Get inventory from ansible.cfg configuration
     try {
-        withCredentials([file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT')]) {
-            writeFile file: 'temp_hosts.ini', text: readFile(env.INVENTORY_CONTENT)
-            
-            // Get all groups and hosts using JSON output
-            def jsonOutput = sh(returnStdout: true, script: '''
-                ansible-inventory -i temp_hosts.ini --list 2>/dev/null || echo '{}'
-            ''').trim()
+        dir('ansible') {
+            def jsonOutput = sh(returnStdout: true, script: 'ansible-inventory --list 2>/dev/null || echo "{}"').trim()
             
             if (jsonOutput && jsonOutput != '{}') {
-                try {
-                    def inventory = readJSON text: jsonOutput
-                    
-                    // Add all groups (top-level keys except _meta)
-                    inventory.keySet().each { key ->
-                        if (key != 'all' && key != '_meta' && key != 'ungrouped') {
-                            targetChoices << key
-                        }
+                def inventory = readJSON text: jsonOutput
+                
+                // Add all groups (top-level keys except _meta)
+                inventory.keySet().each { key ->
+                    if (key != 'all' && key != '_meta' && key != 'ungrouped') {
+                        targetChoices << key
                     }
-                    
-                    // Add all individual hosts from _meta.hostvars
-                    if (inventory._meta && inventory._meta.hostvars) {
-                        inventory._meta.hostvars.keySet().each { host ->
-                            targetChoices << host
-                        }
-                    }
-                } catch (Exception jsonError) {
-                    echo "JSON parsing failed, using fallback method: ${jsonError.message}"
-                    
-                    // Fallback: parse groups from --graph output
-                    def graphOutput = sh(returnStdout: true, script: '''
-                        ansible-inventory -i temp_hosts.ini --graph 2>/dev/null | \\
-                        grep '@' | sed 's/^[^@]*@\\([^:]*\\):.*/\\1/' || true
-                    ''').trim()
-                    
-                    if (graphOutput) {
-                        graphOutput.split('\n').each { line ->
-                            line = line.trim()
-                            if (line && line != 'all' && line != 'ungrouped') {
-                                targetChoices << line
-                            }
-                        }
+                }
+                
+                // Add all individual hosts from _meta.hostvars
+                if (inventory._meta && inventory._meta.hostvars) {
+                    inventory._meta.hostvars.keySet().each { host ->
+                        targetChoices << host
                     }
                 }
             }
-            
-            sh "rm -f temp_hosts.ini"
         }
     } catch (Exception e) {
-        echo "Could not read inventory for target choices: ${e.message}"
-        // Fallback: add some common targets
+        echo "Could not read inventory: ${e.message}"
         targetChoices.addAll(['proxmox-cluster', 'custom-vms'])
     }
     targetChoices = targetChoices.unique().sort()
@@ -120,10 +93,8 @@ var3=value3''',
         stage('Setup') {
             steps {
                 withCredentials([
-                    file(credentialsId: 'ansible-inventory', variable: 'INVENTORY_CONTENT'),
                     string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASSWORD')
                 ]) {
-                    writeFile file: 'ansible/hosts.ini', text: readFile(env.INVENTORY_CONTENT)
                     writeFile file: 'ansible/.vault_pass', text: env.VAULT_PASSWORD
                 }
             }
@@ -136,11 +107,12 @@ var3=value3''',
             steps {
                 echo '✅ Inventory and Playbook list updated successfully!'
                 script {
-                    // Show current inventory for debugging
-                    echo "=== INVENTORY GRAPH ==="
-                    sh "ansible-inventory -i ansible/hosts.ini --graph || true"
-                    echo "=== JSON STRUCTURE ==="
-                    sh "ansible-inventory -i ansible/hosts.ini --list || true"
+                    dir('ansible') {
+                        echo "=== INVENTORY GRAPH ==="
+                        sh "ansible-inventory --graph || true"
+                        echo "=== INVENTORY LIST ==="
+                        sh "ansible-inventory --list || true"
+                    }
                 }
             }
         }
@@ -158,10 +130,9 @@ var3=value3''',
                         error "Playbook ${params.PLAYBOOK} does not exist in ansible/playbooks/"
                     }
                 }
-                sh """
-                    cd ansible
-                    ansible-playbook --syntax-check playbooks/${params.PLAYBOOK} -i hosts.ini -e "target=${params.TARGET}"
-                """
+                dir('ansible') {
+                    sh "ansible-playbook --syntax-check playbooks/${params.PLAYBOOK} -e 'target=${params.TARGET}'"
+                }
             }
         }
 
@@ -170,36 +141,31 @@ var3=value3''',
                 expression { params.PLAYBOOK != 'Update Inventory and Playbooks List' }
             }   
             steps {
-                withCredentials([
-                    string(credentialsId: 'ansible-ssh-key-pub', variable: 'ANSIBLE_SSH_KEY_PUB')
-                ]) {
-                    withEnv(['ANSIBLE_SSH_KEY_PUB=' + env.ANSIBLE_SSH_KEY_PUB]) {
-                        script {
-                            def extraVars = [
-                                ansible_python_interpreter: '/usr/bin/python3',
-                                target: params.TARGET
-                            ]
-                            
-                            if (params.EXTRA_VARS?.trim()) {
-                                params.EXTRA_VARS.split('\n').each { line ->
-                                    if (line.contains('=')) {
-                                        def parts = line.split('=', 2)
-                                        extraVars[parts[0].trim()] = parts[1].trim()
-                                    }
-                                }
+                script {
+                    def extraVars = [
+                        ansible_python_interpreter: '/usr/bin/python3',
+                        target: params.TARGET
+                    ]
+                    
+                    if (params.EXTRA_VARS?.trim()) {
+                        params.EXTRA_VARS.split('\n').each { line ->
+                            if (line.contains('=')) {
+                                def parts = line.split('=', 2)
+                                extraVars[parts[0].trim()] = parts[1].trim()
                             }
-                            
-                            ansiblePlaybook(
-                                playbook: "ansible/playbooks/${params.PLAYBOOK}",
-                                inventory: "ansible/hosts.ini",
-                                credentialsId: 'ansible-ssh-key',
-                                disableHostKeyChecking: true,
-                                colorized: true,
-                                extraVars: extraVars,
-                                tags: params.TAGS ?: '',
-                                checkMode: params.DRY_RUN
-                            )
                         }
+                    }
+                    
+                    dir('ansible') {
+                        ansiblePlaybook(
+                            playbook: "playbooks/${params.PLAYBOOK}",
+                            credentialsId: 'ansible-ssh-key',
+                            disableHostKeyChecking: true,
+                            colorized: true,
+                            extraVars: extraVars,
+                            tags: params.TAGS ?: '',
+                            checkMode: params.DRY_RUN
+                        )
                     }
                 }
             }

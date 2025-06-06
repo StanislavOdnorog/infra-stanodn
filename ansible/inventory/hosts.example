@@ -1,6 +1,0 @@
-[proxmox-cluster]
-# proxmox1 ansible_host=YOUR_PROXMOX_IP
-# proxmox2 ansible_host=YOUR_PROXMOX_IP
-
-[all:vars]
-ansible_python_interpreter=/usr/bin/python3

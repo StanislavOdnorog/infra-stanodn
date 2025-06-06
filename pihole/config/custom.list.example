@@ -1,0 +1,10 @@
+# Local DNS Records for Homelab
+# Format: IP_ADDRESS HOSTNAME ALIAS
+
+# Proxmox Hosts
+192.168.XXX.XXX pve01 pve01.local
+192.168.XXX.XXX pve02 pve02.local
+192.168.XXX.XXX pve03 pve03.local
+
+# Add your VMs here as you create them
+# Format: IP_ADDRESS VM_NAME VM_NAME.local 

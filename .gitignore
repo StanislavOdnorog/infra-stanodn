@@ -20,3 +20,10 @@ nginx/logs/*
 
 # Ansible
 *.ini
+.vault_pass
+
+# Terraform
+variables.auto.tfvars
+
+# Pi-hole
+pihole/config/custom.list

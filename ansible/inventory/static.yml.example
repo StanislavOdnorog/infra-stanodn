@@ -1,0 +1,19 @@
+# Static Inventory - Infrastructure not managed by Proxmox VMs
+# This includes Proxmox hosts themselves and external services
+
+all:
+  children:
+    proxmox_hosts:
+      hosts:
+        pve01:
+          ansible_host: 192.168.XX.XX
+          vm_prefix_id: 100
+          proxmox_node: pve01
+        pve02:
+          ansible_host: 192.168.XX.XX
+          vm_prefix_id: 200
+          proxmox_node: pve02
+        pve03:
+          ansible_host: 192.168.XX.XX
+          vm_prefix_id: 300
+          proxmox_node: pve03 
