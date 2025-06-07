@@ -1,61 +1,46 @@
-version: '3.8'
-
+---
 services:
+#  netbootxyz:
+#    image: lscr.io/linuxserver/netbootxyz:0.7.0-ls139
+#    container_name: netbootxyz
+#    environment:
+#      - PUID=${PUID}
+#      - PGID=${PGID}
+#      - TZ=${TZ}
+#      - MENU_VERSION=${MENU_VERSION}
+#      - PORT_RANGE=${PORT_RANGE}
+#      - SUBFOLDER=${SUBFOLDER}
+#    volumes:
+#      - ./netbootxyz/config:/config
+#      - ./netbootxyz/assets:/assets
+#    ports:
+#      - 3000:3000
+#      - 69:69/udp
+#      - 8080:80
+#    cap_add:
+#      - NET_ADMIN
+#    restart: unless-stopped
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
-    hostname: pihole
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "80:80/tcp"
-      - "443:443/tcp"
-      - "67:67/udp"
-    env_file:
-      - .env
-      
+    environment:
+      - ServerIP=${SERVER_IP}
+      - TZ=${TZ}
+      - WEBPASSWORD=${WEBPASSWORD}
+      - PIHOLE_DNS_1=${PIHOLE_DNS_1}
+      - PIHOLE_DNS_2=${PIHOLE_DNS_2}
+      - INTERFACE=${PIHOLE_INTERFACE}
+      - DHCP_ACTIVE=${DHCP_ACTIVE}
+      - DHCP_START=${DHCP_START}
+      - DHCP_END=${DHCP_END}
+      - DHCP_ROUTER=${DHCP_ROUTER}
+      - DHCP_LEASETIME=${DHCP_LEASETIME}
+      - PIHOLE_DOMAIN=${PIHOLE_DOMAIN}
+      - PXE_SERVER_IP=${PXE_SERVER_IP}
     volumes:
-      - './config/etc-pihole:/etc/pihole'
-      - './config/custom.list:/etc/pihole/custom.list'
-      - './logs:/var/log/pihole'
-      
+      - ./pihole/etc:/etc/pihole
+      - ./pihole/dnsmasq.d:/etc/dnsmasq.d
     cap_add:
-      - NET_BIND_SERVICE
-      - NET_RAW
-      - NET_ADMIN 
-      - SYS_NICE
-      - CHOWN
-    dns:
-      - 127.0.0.1
-      - 1.1.1.1
-      - 8.8.8.8
-    healthcheck:
-      test: ["CMD", "dig", "@127.0.0.1", "-p", "53", "pi.hole", "+short", "+time=5", "+tries=1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    
-    restart: unless-stopped
-    
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
-    
-    security_opt:
-      - no-new-privileges:true
-    
-    networks:
-      - pihole-network
-
-networks:
-  pihole-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
-    driver_opts:
-      com.docker.network.bridge.name: pihole-br
+      - NET_ADMIN
+    network_mode: host
+    restart: always
