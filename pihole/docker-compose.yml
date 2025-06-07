@@ -26,16 +26,16 @@ services:
     environment:
       - ServerIP=${SERVER_IP}
       - TZ=${TZ}
-      - WEBPASSWORD=${WEBPASSWORD}
-      - PIHOLE_DNS_1=${PIHOLE_DNS_1}
-      - PIHOLE_DNS_2=${PIHOLE_DNS_2}
-      - INTERFACE=${PIHOLE_INTERFACE}
-      - DHCP_ACTIVE=${DHCP_ACTIVE}
-      - DHCP_START=${DHCP_START}
-      - DHCP_END=${DHCP_END}
-      - DHCP_ROUTER=${DHCP_ROUTER}
-      - DHCP_LEASETIME=${DHCP_LEASETIME}
-      - PIHOLE_DOMAIN=${PIHOLE_DOMAIN}
+      - FTLCONF_webserver_api_password=${FTLCONF_webserver_api_password}
+      - FTLCONF_dns_upstreams_1=${FTLCONF_dns_upstreams_1}
+      - FTLCONF_dns_upstreams_2=${FTLCONF_dns_upstreams_2}
+      - FTLCONF_dns_interface=${FTLCONF_dns_interface}
+      - FTLCONF_dhcp_active=${FTLCONF_dhcp_active}
+      - FTLCONF_dhcp_start=${FTLCONF_dhcp_start}
+      - FTLCONF_dhcp_end=${FTLCONF_dhcp_end}
+      - FTLCONF_dhcp_router=${FTLCONF_dhcp_router}
+      - FTLCONF_dhcp_leaseTime=${FTLCONF_dhcp_leaseTime}
+      - FTLCONF_dns_domain=${FTLCONF_dns_domain}
       - PXE_SERVER_IP=${PXE_SERVER_IP}
     volumes:
       - ./pihole/etc:/etc/pihole
