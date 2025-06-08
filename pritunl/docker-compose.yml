@@ -7,6 +7,7 @@ services:
       - 8443:443
       - 1194:1194
       - 8080:80
+      - 15343:15343
     volumes:
       - pritunl-data:/var/lib/pritunl
     cap_add:
