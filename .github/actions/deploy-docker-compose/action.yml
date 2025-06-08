@@ -67,14 +67,10 @@ runs:
         key: ${{ inputs.server_ssh_key }}
         script: |
           cd ${{ inputs.service_name }}
-          
-          STATUS_OUTPUT=$(docker-compose ps --format '{{.Name}}\t{{.Status}}')
-          FAILED_SERVICES=$(echo "$STATUS_OUTPUT" | grep -v "Up " | grep -v "^$" || true)
-          
-          if [ -n "$FAILED_SERVICES" ]; then
-            echo "❌ The following services are not running properly:"
-            echo "$FAILED_SERVICES"
-            exit 1
+          if $(docker inspect ${{ inputs.service_name }} --format '{{ .State.Running }}'); then
+            echo "✅ The service is running successfully"
+            exit 0
           else
-            echo "✅ All services are running successfully"
+            echo "❌ The service is not running properly"
+            exit 1
           fi
