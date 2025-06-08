@@ -1,0 +1,17 @@
+version: '3'
+services:
+  pritunl:
+    image: jippi/pritunl
+    container_name: pritunl
+    ports:
+      - 8443:443
+      - 1194:1194
+      - 8080:80
+    volumes:
+      - pritunl-data:/var/lib/pritunl
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+
+volumes:
+  pritunl-data:

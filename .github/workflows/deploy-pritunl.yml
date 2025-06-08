@@ -1,0 +1,26 @@
+name: Deploy Pritunl
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'pritunl/**'
+      - '.github/workflows/deploy-pritunl.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy Pritunl
+        uses: ./.github/actions/deploy-docker-compose
+        with:
+          server_host: ${{ secrets.PRITUNL_SERVER_HOST }}
+          server_username: ${{ secrets.PRITUNL_SERVER_USERNAME }}
+          server_port: ${{ secrets.PRITUNL_SERVER_PORT }}
+          server_ssh_key: ${{ secrets.PRITUNL_SERVER_SSH_KEY }}
+          service_name: 'pritunl'
+          source_path: 'pritunl' 
