@@ -2,69 +2,61 @@ def playbookChoices = []
 def targetChoices = ['all']
 node {
     checkout scm
+    
+    // Get playbooks
     def playbooks = sh(returnStdout: true, script: "find ansible/playbooks/ | grep .yml 2>/dev/null || true")
     playbooks.split().each { playbook ->
         playbookChoices << playbook.replace('ansible/playbooks/', '')
     }
-    playbookChoices.add(0, 'Update Inventory and Playbooks List')
     
-    // Get inventory from ansible.cfg configuration
+    // Get inventory targets
     try {
         dir('ansible') {
-            echo "=== Parsing inventory for parameter choices ==="
+            echo "=== Parsing ansible inventory for targets ==="
             def jsonOutput = sh(returnStdout: true, script: 'ansible-inventory --list 2>/dev/null || echo "{}"').trim()
-            echo "Raw inventory output length: ${jsonOutput.length()}"
             
             if (jsonOutput && jsonOutput != '{}' && jsonOutput.length() > 10) {
                 def inventory = readJSON text: jsonOutput
-                echo "✅ Successfully parsed JSON inventory for parameter choices"
+                echo "Successfully parsed inventory JSON"
                 
-                // Add all groups (top-level keys except _meta, all, and ungrouped)
+                // Add all groups (excluding _meta, all, ungrouped)
                 inventory.keySet().each { key ->
                     if (key != 'all' && key != '_meta' && key != 'ungrouped') {
-                        echo "Adding group to choices: ${key}"
                         targetChoices << key
                     }
                 }
                 
-                // Add all individual hosts from _meta.hostvars
+                // Add all hosts from _meta.hostvars
                 if (inventory._meta && inventory._meta.hostvars) {
-                    echo "Found _meta.hostvars with ${inventory._meta.hostvars.keySet().size()} hosts"
                     inventory._meta.hostvars.keySet().each { host ->
-                        echo "Adding host to choices: ${host}"
                         targetChoices << host
                     }
                 }
                 
-                // Also check for hosts in group definitions
+                // Add hosts from group definitions as backup
                 inventory.keySet().each { groupName ->
                     if (groupName != 'all' && groupName != '_meta' && groupName != 'ungrouped') {
                         def group = inventory[groupName]
-                        if (group.hosts) {
+                        if (group instanceof Map && group.hosts) {
                             group.hosts.each { host ->
-                                if (!targetChoices.contains(host)) {
-                                    echo "Adding host from group ${groupName}: ${host}"
-                                    targetChoices << host
-                                }
+                                targetChoices << host
                             }
                         }
                     }
                 }
                 
                 targetChoices = targetChoices.unique().sort()
-                echo "Final target choices: ${targetChoices.join(', ')}"
+                echo "Found targets: ${targetChoices.join(', ')}"
                 
             } else {
-                echo "No valid inventory data - using fallback targets"
+                echo "No inventory data found, using default targets"
                 targetChoices.addAll(['localhost'])
             }
         }
     } catch (Exception e) {
-        echo "Inventory parsing failed: ${e.message}"
+        echo "Failed to parse inventory: ${e.message}"
         targetChoices.addAll(['localhost'])
     }
-    
-    targetChoices = targetChoices.unique().sort()
 }
 
 pipeline {
@@ -76,7 +68,7 @@ pipeline {
         choice(
             name: 'PLAYBOOK',
             choices: playbookChoices,
-            description: 'Select playbook to run or Update to refresh the inventory and playbooks list'
+            description: 'Select playbook to run'
         )
         choice(
             name: 'TARGET',
@@ -129,95 +121,7 @@ var3=value3''',
             }
         }
 
-        stage('Update Inventory and Playbooks List') {
-            when {
-                expression { params.PLAYBOOK == 'Update Inventory and Playbooks List' }
-            }
-            steps {
-                script {
-                    echo '🔄 Updating inventory and playbook lists...'
-                    
-                    dir('ansible') {
-                        echo "=== INVENTORY GRAPH ==="
-                        sh "ansible-inventory --graph || true"
-                        echo ""
-                        echo "=== INVENTORY LIST ==="
-                        sh "ansible-inventory --list || true"
-                        echo ""
-                        
-                        // Parse and display all available targets
-                        try {
-                            echo "=== DISCOVERING ALL AVAILABLE TARGETS ==="
-                            def discoveredTargets = ['all']
-                            
-                            def jsonOutput = sh(returnStdout: true, script: 'ansible-inventory --list 2>/dev/null || echo "{}"').trim()
-                            echo "Raw inventory output length: ${jsonOutput.length()}"
-                            
-                            if (jsonOutput && jsonOutput != '{}' && jsonOutput.length() > 10) {
-                                def inventory = readJSON text: jsonOutput
-                                echo "✅ Successfully parsed JSON inventory"
-                                
-                                // Add all groups (top-level keys except _meta, all, and ungrouped)
-                                echo "\n📁 AVAILABLE GROUPS:"
-                                inventory.keySet().each { key ->
-                                    if (key != 'all' && key != '_meta' && key != 'ungrouped') {
-                                        echo "  - ${key}"
-                                        discoveredTargets << key
-                                    }
-                                }
-                                
-                                // Add all individual hosts
-                                echo "\n🖥️  AVAILABLE HOSTS:"
-                                if (inventory._meta && inventory._meta.hostvars) {
-                                    inventory._meta.hostvars.keySet().each { host ->
-                                        echo "  - ${host}"
-                                        discoveredTargets << host
-                                    }
-                                }
-                                
-                                // Also check for hosts in group definitions
-                                inventory.keySet().each { groupName ->
-                                    if (groupName != 'all' && groupName != '_meta' && groupName != 'ungrouped') {
-                                        def group = inventory[groupName]
-                                        if (group.hosts) {
-                                            group.hosts.each { host ->
-                                                if (!discoveredTargets.contains(host)) {
-                                                    echo "  - ${host} (from group ${groupName})"
-                                                    discoveredTargets << host
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                discoveredTargets = discoveredTargets.unique().sort()
-                                echo "\n🎯 ALL DISCOVERED TARGETS (${discoveredTargets.size()} total):"
-                                discoveredTargets.each { target ->
-                                    echo "  ✓ ${target}"
-                                }
-                                
-                                echo "\n💡 Next time you run a playbook, you'll be able to choose from these targets!"
-                                
-                            } else {
-                                echo "❌ No valid inventory data available"
-                                echo "Raw output: '${jsonOutput}'"
-                            }
-                            
-                        } catch (Exception e) {
-                            echo "❌ Error parsing inventory: ${e.message}"
-                            e.printStackTrace()
-                        }
-                    }
-                    
-                    echo '\n✅ Inventory and Playbook list updated successfully!'
-                }
-            }
-        }
-
         stage('Validate Playbook') {
-            when {
-                expression { params.PLAYBOOK != 'Update Inventory and Playbooks List' }
-            }
             steps {
                 script {
                     if (!params.PLAYBOOK) {
@@ -233,10 +137,7 @@ var3=value3''',
             }
         }
 
-        stage('Run Ansible Playbook') {
-            when {
-                expression { params.PLAYBOOK != 'Update Inventory and Playbooks List' }
-            }   
+        stage('Run Ansible Playbook') {   
             steps {
                 script {
                     def extraVars = [
