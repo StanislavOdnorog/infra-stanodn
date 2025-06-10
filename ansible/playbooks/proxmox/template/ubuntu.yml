@@ -3,14 +3,13 @@
   hosts: "{{ target }}"
   become: yes
   vars_files:
-    - ../group_vars/all.yml
+    - ../../../group_vars/all.yml
+    - ../../../group_vars/cloud-init.yml
   tasks:
     - name: Create Ubuntu Template
-      block:
-        - name: Create Ubuntu Template
-          include_role:
-            name: ../roles/provision/proxmox/image-templates/ubuntu
-          tags:
-            - template
-            - ubuntu
-            - proxmox
+      include_role:
+        name: provision/proxmox/image-templates/ubuntu
+      tags:
+        - template
+        - ubuntu
+        - proxmox

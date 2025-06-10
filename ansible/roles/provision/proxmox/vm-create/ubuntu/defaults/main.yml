@@ -1,0 +1,73 @@
+---
+# VM Basic Configuration
+vm_name: "{{ inventory_hostname }}"
+vm_id: "{{ vm_prefix_id | default(100) }}{{ '%02d' | format(ansible_play_hosts.index(inventory_hostname) + 1) }}"
+vm_template: "ubuntu-noble-template"
+vm_description: "VM created by Ansible"
+
+# VM Hardware Configuration - easily overridable
+vm_cores: 2
+vm_memory: 2048
+vm_disk_size: "40G"
+
+# Interactive Configuration
+vm_interactive_config: true  
+
+# Network Configuration
+vm_net_bridge: "vmbr0"
+vm_net_model: "virtio"
+vm_net_firewall: false
+vm_net_vlan: ""
+
+# Storage Configuration
+vm_storage: "local-lvm"
+vm_disk_format: "raw"
+vm_disk_cache: "none"
+vm_disk_iothread: true
+
+# Cloud-Init Configuration
+vm_cloudinit_user: "infra"
+vm_cloudinit_password: ""  # Leave empty to use SSH key only
+vm_cloudinit_ssh_key: ""   # SSH public key content
+vm_cloudinit_nameservers: "8.8.8.8,8.8.4.4"
+vm_cloudinit_searchdomain: "local"
+vm_cloudinit_ip_config: "dhcp"  # or "static" with vm_static_ip
+
+# Static IP Configuration (when vm_cloudinit_ip_config: "static")
+vm_static_ip: ""
+vm_static_netmask: "24"
+vm_static_gateway: ""
+
+# VM Hardware Options
+vm_cpu_type: "host"
+vm_numa: false
+vm_hotplug: "disk,network,usb"
+vm_ostype: "l26"  # Linux 2.6+
+vm_machine_type: "q35"
+
+# VM Boot and Startup Options
+vm_onboot: true
+vm_startup_order: ""
+vm_startup_delay: ""
+
+# QEMU Guest Agent
+vm_qemu_agent: true
+
+# Backup Configuration
+vm_backup: true
+vm_backup_schedule: "daily"
+
+# Advanced Options
+vm_protection: false
+vm_ballooning: true
+vm_tablet: true
+
+# Template and Clone Options
+vm_clone_from_template: true
+vm_full_clone: true
+vm_linked_clone: false
+
+# Post-Creation Options
+vm_start_after_create: true
+vm_wait_for_guest_agent: true
+vm_wait_timeout: 300 
