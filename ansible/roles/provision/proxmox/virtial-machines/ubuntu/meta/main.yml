@@ -1,6 +1,6 @@
 ---
 dependencies:
-  - role: ../../image-templates/ubuntu
+  - role: ../image-templates/ubuntu
     vars:
       vm_id: "{{ template_vm_id | default(vm_prefix_id | default(100) + 10) }}"
       template_name: "{{ vm_template }}"

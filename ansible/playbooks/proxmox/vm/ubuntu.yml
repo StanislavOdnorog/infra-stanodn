@@ -8,7 +8,7 @@
   tasks:
     - name: Create VM with interactive configuration
       include_role:
-        name: provision/proxmox/vm-create/ubuntu
+        name: provision/proxmox/virtual-machines/ubuntu
       tags:
         - vm
         - proxmox
