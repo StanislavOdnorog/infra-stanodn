@@ -247,7 +247,7 @@ var3=value3''',
                 script {
                     def extraVars = [
                         ansible_python_interpreter: '/usr/bin/python3',
-                        target: params.TARGET
+                        target: env.SELECTED_TARGET
                     ]
                     
                     if (params.EXTRA_VARS?.trim()) {
@@ -279,7 +279,7 @@ var3=value3''',
         always {
             cleanWs()
             script {
-                currentBuild.description = "Playbook: ${params.PLAYBOOK}, Target: ${params.TARGET}"
+                currentBuild.description = "Playbook: ${params.PLAYBOOK}, Target: ${env.SELECTED_TARGET ?: 'Update Only'}"
             }
         }
         success {
