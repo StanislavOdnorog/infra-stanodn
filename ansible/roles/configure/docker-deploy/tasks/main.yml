@@ -13,51 +13,11 @@
     repo_root: "{{ inventory_dir }}/../.."
     dest_path: "{{ docker_dest_dir }}/{{ docker_app_dir }}"
 
-- name: Debug workspace structure
-  debug:
-    msg:
-      - "Checking workspace structure..."
-  delegate_to: localhost
-  become: false
-
-- name: List inventory directory contents
-  local_action:
-    module: find
-    paths: "{{ inventory_dir }}"
-    file_type: any
-  register: inventory_contents
-  become: false
-
-- name: List repository root contents  
-  local_action:
-    module: find
-    paths: "{{ repo_root }}"
-    file_type: any
-  register: repo_contents
-  become: false
-
-- name: Show directory contents
-  debug:
-    msg:
-      - "Inventory dir ({{ inventory_dir }}) contents: {{ inventory_contents.files | map(attribute='path') | list }}"
-      - "Repo root ({{ repo_root }}) contents: {{ repo_contents.files | map(attribute='path') | list }}"
-  delegate_to: localhost
-  become: false
-
 - name: Check if source directory exists
   local_action:
     module: stat
     path: "{{ repo_root }}/docker-apps/{{ docker_app_dir }}"
   register: source_dir_stat
-  become: false
-
-- name: Debug final paths
-  debug:
-    msg:
-      - "Repository root: {{ repo_root }}"
-      - "Source path: {{ repo_root }}/docker-apps/{{ docker_app_dir }}"
-      - "Directory exists: {{ source_dir_stat.stat.exists }}"
-  delegate_to: localhost
   become: false
 
 - name: Fail if source directory doesn't exist
@@ -73,27 +33,22 @@
     group: "{{ docker_file_group }}"
     mode: "0755"
 
-
-- name: Copy application directory
-  copy:
+- name: Copy entire application directory
+  synchronize:
     src: "{{ repo_root }}/docker-apps/{{ docker_app_dir }}/"
     dest: "{{ dest_path }}/"
-    owner: "{{ docker_file_owner }}"
-    group: "{{ docker_file_group }}"
-    mode: "0644"
-    directory_mode: "0755"
+    owner: false
+    group: false
+    delete: true
+    recursive: true
+  delegate_to: localhost
 
-- name: Copy .env.example to .env if exists and .env doesn't exist
-  copy:
-    src: "{{ dest_path }}/.env.example"
-    dest: "{{ dest_path }}/.env"
-    remote_src: true
+- name: Set proper ownership
+  file:
+    path: "{{ dest_path }}"
     owner: "{{ docker_file_owner }}"
     group: "{{ docker_file_group }}"
-    mode: "0644"
-  when: 
-    - ansible_stat_result.stat.exists is defined
-  ignore_errors: true
+    recurse: true
 
 - name: Check if .env.example exists
   stat:
@@ -122,7 +77,6 @@
     cd {{ dest_path }}
     docker-compose down
   ignore_errors: true
-  when: dest_path is defined
 
 - name: Start docker-compose services
   shell: |
@@ -133,7 +87,7 @@
 - name: Display deployment summary
   debug:
     msg:
-      - "🐳 Docker Deployment Complete!"
+      - "Docker Deployment Complete!"
       - "App: {{ docker_app_dir }}"
       - "Location: {{ dest_path }}"
       - "Manage: cd {{ dest_path }} && docker-compose [up|down|logs]" 
