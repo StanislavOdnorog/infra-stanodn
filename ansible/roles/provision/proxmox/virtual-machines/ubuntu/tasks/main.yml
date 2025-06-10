@@ -39,7 +39,7 @@
 
 - name: Clone VM from template
   command: >
-    qm clone {{ vm_template }} {{ vm_id }}
+    qm clone {{ vm_template_id }} {{ vm_id }}
     --name {{ vm_name }}
     {% if vm_full_clone %}--full{% endif %}
     {% if vm_description %}--description "{{ vm_description }}"{% endif %}
