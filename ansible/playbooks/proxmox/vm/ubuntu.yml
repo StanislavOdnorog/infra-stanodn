@@ -1,0 +1,16 @@
+---
+- name: Create Ubuntu Template in Proxmox
+  hosts: "{{ target }}"
+  become: yes
+  vars_files:
+    - ../group_vars/all.yml
+  tasks:
+    - name: Create Ubuntu Template
+      block:
+        - name: Create Ubuntu Template
+          include_role:
+            name: ../roles/provision/proxmox/image-templates/ubuntu
+          tags:
+            - template
+            - ubuntu
+            - proxmox
