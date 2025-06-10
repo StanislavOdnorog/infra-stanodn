@@ -31,16 +31,3 @@
         name: configure/docker-deploy
       vars:
         docker_app_dir: "{{ app_dir }}"
-
-  post_tasks:
-    - name: Show management commands
-      debug:
-        msg:
-          - "Deployment complete!"
-          - ""
-          - "To manage your app:"
-          - "  ssh {{ target }}"
-          - "  cd /opt/docker-apps/{{ app_dir }}"
-          - "  docker-compose logs    # View logs"
-          - "  docker-compose down   # Stop app"
-          - "  docker-compose up -d  # Start app" 
