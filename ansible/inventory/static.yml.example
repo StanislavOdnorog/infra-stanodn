@@ -3,7 +3,7 @@
 
 all:
   children:
-    proxmox_hosts:
+    cluster-proxmox:
       hosts:
         pve01:
           ansible_host: 192.168.XX.XX
