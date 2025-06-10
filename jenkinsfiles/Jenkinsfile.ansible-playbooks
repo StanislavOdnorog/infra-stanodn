@@ -114,6 +114,11 @@ var2=value2
 var3=value3''',
             description: 'Extra variables to pass to the playbook (one per line, format: key=value)'
         )
+        choice(
+            name: 'INTERACTIVE_MODE',
+            choices: ['auto', 'interactive', 'non-interactive'],
+            description: 'How to handle interactive playbooks: auto (detect and handle), interactive (full terminal), non-interactive (disable prompts)'
+        )
     }
 
     options {
@@ -168,6 +173,34 @@ var3=value3''',
             }
         }
 
+        stage('Handle Interactive Input') {
+            when {
+                allOf {
+                    expression { params.PLAYBOOK != 'Update Inventory and Playbooks List' }
+                    expression { params.PROMPT_FOR_INPUT }
+                }
+            }
+            steps {
+                script {
+                    echo "🎯 Interactive input enabled for playbook: ${params.PLAYBOOK}"
+                    
+                    def userInput = input(
+                        message: 'Provide additional configuration for the playbook:',
+                        parameters: [
+                            text(
+                                name: 'CUSTOM_VARS',
+                                defaultValue: '',
+                                description: 'Additional variables (one per line, format: key=value)'
+                            )
+                        ]
+                    )
+                    
+                    env.CUSTOM_VARS = userInput
+                    echo "✅ Custom variables received: ${userInput}"
+                }
+            }
+        }
+
         stage('Validate Playbook') {
             when {
                 expression { params.PLAYBOOK != 'Update Inventory and Playbooks List' }
@@ -198,11 +231,45 @@ var3=value3''',
                         target: params.TARGET
                     ]
                     
-                    if (params.EXTRA_VARS?.trim()) {
-                        params.EXTRA_VARS.split('\n').each { line ->
-                            if (line.contains('=')) {
+                    // Handle interactive mode
+                    if (params.HANDLE_INTERACTIVE) {
+                        extraVars.putAll([
+                            jenkins_mode: true,
+                            interactive_mode: false,
+                            vm_interactive_config: false,
+                            force_non_interactive: true
+                        ])
+                        echo "🔧 Interactive handling enabled - disabling Ansible interactive prompts"
+                    }
+                    
+                    // Add custom variables from interactive input
+                    if (params.PROMPT_FOR_INPUT && env.CUSTOM_VARS?.trim()) {
+                        echo "📝 Processing custom variables from interactive input..."
+                        env.CUSTOM_VARS.split('\n').each { line ->
+                            if (line.contains('=') && line.trim() != '') {
                                 def parts = line.split('=', 2)
-                                extraVars[parts[0].trim()] = parts[1].trim()
+                                def key = parts[0].trim()
+                                def value = parts[1].trim()
+                                if (key && value) {
+                                    extraVars[key] = value
+                                    echo "  Added: ${key} = ${value}"
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Add regular extra vars
+                    if (params.EXTRA_VARS?.trim()) {
+                        echo "📝 Processing regular extra variables..."
+                        params.EXTRA_VARS.split('\n').each { line ->
+                            if (line.contains('=') && line.trim() != '') {
+                                def parts = line.split('=', 2)
+                                def key = parts[0].trim()
+                                def value = parts[1].trim()
+                                if (key && value && !key.startsWith('var')) { // Skip example vars
+                                    extraVars[key] = value
+                                    echo "  Added: ${key} = ${value}"
+                                } 
                             }
                         }
                     }

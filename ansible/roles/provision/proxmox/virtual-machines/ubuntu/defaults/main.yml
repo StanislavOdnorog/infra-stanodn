@@ -1,6 +1,6 @@
 ---
 # VM Basic Configuration
-vm_id: "{{ vm_prefix_id * 10 | default(1000) }}{{ '%02d' | format(ansible_play_hosts.index(inventory_hostname) + 1) }}"
+vm_id: "{{ vm_prefix_id + 1010 }}"
 vm_template: "ubuntu-noble-template"
 vm_name: "vm-{{ vm_id}}"
 vm_description: "VM created by Ansible"

@@ -53,18 +53,18 @@
 
 - name: Display final VM configuration
   debug:
-    msg: |
-      📋 Final VM Configuration:
-      ========================
-      VM Name: {{ vm_name }}
-      VM ID: {{ vm_id }}
-      vCPU Cores: {{ vm_cores }}
-      Memory: {{ vm_memory }} MB
-      Disk Size: {{ vm_disk_size }}
-      Description: {{ vm_description }}
-      Template: {{ vm_template }}
-      Storage: {{ vm_storage }}
-      Network: {{ vm_net_bridge }}
+    msg:
+    - 📋 Final VM Configuration:
+    - ========================
+    - VM Name: {{ vm_name }}
+    - VM ID: {{ vm_id }}
+    - vCPU Cores: {{ vm_cores }}
+    - Memory: {{ vm_memory }} MB
+    - Disk Size: {{ vm_disk_size }}
+    - Description: {{ vm_description }}
+    - Template: {{ vm_template }}
+    - Storage: {{ vm_storage }}
+    - Network: {{ vm_net_bridge }}
 
 - name: Validate VM configuration
   assert:
