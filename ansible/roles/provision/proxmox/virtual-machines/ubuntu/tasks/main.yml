@@ -1,70 +1,19 @@
 ---
-- name: Interactive VM Configuration
-  block:
-    - name: Prompt for VM configuration
-      pause:
-        prompt: |
-          
-          🖥️  VM Configuration for: {{ vm_name }}
-          ================================================
-          
-          Current defaults:
-          - vCPU Cores: {{ vm_cores }}
-          - Memory (MB): {{ vm_memory }}
-          - Disk Size: {{ vm_disk_size }}
-          - Description: {{ vm_description }}
-          
-          Do you want to customize these settings? (y/N)
-      register: customize_vm
-      
-    - name: Get custom VM configuration
-      block:
-        - name: Get number of vCPU cores
-          pause:
-            prompt: "Enter number of vCPU cores [{{ vm_cores }}]"
-          register: custom_cores
-          
-        - name: Get memory size
-          pause:
-            prompt: "Enter memory in MB [{{ vm_memory }}]"
-          register: custom_memory
-          
-        - name: Get disk size
-          pause:
-            prompt: "Enter disk size (e.g., 40G, 100G) [{{ vm_disk_size }}]"
-          register: custom_disk_size
-          
-        - name: Get VM description
-          pause:
-            prompt: "Enter VM description [{{ vm_description }}]"
-          register: custom_description
-          
-        - name: Apply custom configuration
-          set_fact:
-            vm_cores: "{{ custom_cores.user_input | default(vm_cores, true) }}"
-            vm_memory: "{{ custom_memory.user_input | default(vm_memory, true) }}"
-            vm_disk_size: "{{ custom_disk_size.user_input | default(vm_disk_size, true) }}"
-            vm_description: "{{ custom_description.user_input | default(vm_description, true) }}"
-          when: 
-            - custom_cores.user_input is defined or custom_memory.user_input is defined or custom_disk_size.user_input is defined or custom_description.user_input is defined
-            
-      when: customize_vm.user_input | lower | regex_search('^y')
-  when: vm_interactive_config | default(true)
 
 - name: Display final VM configuration
   debug:
     msg:
     - "📋 Final VM Configuration:"
     - "========================"
-    - "VM Name: {{ vm_name }}"
-    - "VM ID: {{ vm_id }}"
-    - "vCPU Cores: {{ vm_cores }}"
-    - "Memory: {{ vm_memory }} MB"
-    - "Disk Size: {{ vm_disk_size }}"
-    - "Description: {{ vm_description }}"
-    - "Template: {{ vm_template }}"
-    - "Storage: {{ vm_storage }}"
-    - "Network: {{ vm_net_bridge }}"
+    - "VM Name (vm_name): {{ vm_name }}"
+    - "VM ID (vm_id): {{ vm_id }}"
+    - "vCPU Cores (vm_cores): {{ vm_cores }}"
+    - "Memory (vm_memory): {{ vm_memory }} MB"
+    - "Disk Size (vm_disk_size): {{ vm_disk_size }}"
+    - "Description (vm_description): {{ vm_description }}"
+    - "Template (vm_template): {{ vm_template }}"
+    - "Storage (vm_storage): {{ vm_storage }}"
+    - "Network (vm_net_bridge): {{ vm_net_bridge }}"
 
 - name: Validate VM configuration
   assert:
@@ -87,40 +36,6 @@
   fail:
     msg: "VM with ID {{ vm_id }} already exists"
   when: vm_exists_check.rc == 0
-
-- name: Verify template exists
-  block:
-    - name: Check if template exists
-      command: qm config {{ vm_template }}
-      register: template_check
-      failed_when: false
-      changed_when: false
-      
-    - name: Display template status
-      debug:
-        msg: |
-          {% if template_check.rc == 0 %}
-          ✅ Template '{{ vm_template }}' found and ready to use
-          {% else %}
-          ⚠️  Template '{{ vm_template }}' not found
-          {% if ensure_template_exists %}
-          The dependency should have created it automatically.
-          If this fails, the ubuntu image-templates role will run first.
-          {% else %}
-          Please ensure the template exists or set ensure_template_exists: true
-          {% endif %}
-          {% endif %}
-          
-    - name: Fail if template doesn't exist and auto-creation is disabled
-      fail:
-        msg: |
-          Template '{{ vm_template }}' does not exist.
-          Either:
-          1. Create the template manually, or
-          2. Set ensure_template_exists: true to auto-create it
-      when: 
-        - template_check.rc != 0
-        - not ensure_template_exists
 
 - name: Clone VM from template
   command: >
@@ -150,49 +65,6 @@
   command: qm resize {{ vm_id }} scsi0 {{ vm_disk_size }}
   when: vm_disk_size is defined
 
-- name: Configure VM network
-  command: >
-    qm set {{ vm_id }}
-    --net0 {{ vm_net_model }},bridge={{ vm_net_bridge }}
-    {% if not vm_net_firewall %},firewall=0{% endif %}
-    {% if vm_net_vlan %},tag={{ vm_net_vlan }}{% endif %}
-
-- name: Configure Cloud-Init settings
-  block:
-    - name: Set Cloud-Init user and networking
-      command: >
-        qm set {{ vm_id }}
-        --ciuser {{ vm_cloudinit_user }}
-        {% if vm_cloudinit_password %}--cipassword "{{ vm_cloudinit_password }}"{% endif %}
-        --nameserver {{ vm_cloudinit_nameservers }}
-        --searchdomain {{ vm_cloudinit_searchdomain }}
-        {% if vm_cloudinit_ip_config == "dhcp" %}--ipconfig0 "ip=dhcp"{% endif %}
-        {% if vm_cloudinit_ip_config == "static" and vm_static_ip %}--ipconfig0 "ip={{ vm_static_ip }}/{{ vm_static_netmask }},gw={{ vm_static_gateway }}"{% endif %}
-
-    - name: Configure SSH key for Cloud-Init
-      block:
-        - name: Create temporary SSH key file
-          copy:
-            content: "{{ vm_cloudinit_ssh_key }}"
-            dest: "/tmp/ssh_key_{{ vm_id }}.pub"
-            mode: '0644'
-
-        - name: Set SSH key in VM
-          command: qm set {{ vm_id }} --sshkeys /tmp/ssh_key_{{ vm_id }}.pub
-
-        - name: Remove temporary SSH key file
-          file:
-            path: "/tmp/ssh_key_{{ vm_id }}.pub"
-            state: absent
-      when: vm_cloudinit_ssh_key is defined and vm_cloudinit_ssh_key != ""
-
-- name: Configure VM startup options
-  command: >
-    qm set {{ vm_id }}
-    {% if vm_startup_order %}--startup order={{ vm_startup_order }}{% endif %}
-    {% if vm_startup_delay %},up={{ vm_startup_delay }}{% endif %}
-  when: vm_startup_order is defined or vm_startup_delay is defined
-
 - name: Start VM after creation
   command: qm start {{ vm_id }}
   when: vm_start_after_create
@@ -208,10 +80,8 @@
 - name: Display VM creation summary
   debug:
     msg: |
-      ✅ VM Creation Complete!
-      VM Name: {{ vm_name }}
-      VM ID: {{ vm_id }}
-      Configuration: {{ vm_cores }} vCPU, {{ vm_memory }}MB RAM, {{ vm_disk_size }} disk
-      Status: {{ 'Started' if vm_start_after_create else 'Created (stopped)' }}
-      {% if vm_cloudinit_ip_config == "dhcp" %}Network: DHCP{% endif %}
-      {% if vm_cloudinit_ip_config == "static" and vm_static_ip %}Network: {{ vm_static_ip }}/{{ vm_static_netmask }}{% endif %} 
+      - "✅ VM Creation Complete!"
+      - "VM Name: {{ vm_name }}"
+      - "VM ID: {{ vm_id }}"
+      - "Configuration: {{ vm_cores }} vCPU, {{ vm_memory }}MB RAM, {{ vm_disk_size }} disk"
+      - "Status: {{ 'Started' if vm_start_after_create else 'Created (stopped)' }}"

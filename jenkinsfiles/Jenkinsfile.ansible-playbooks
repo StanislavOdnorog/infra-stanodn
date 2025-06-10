@@ -114,11 +114,7 @@ var2=value2
 var3=value3''',
             description: 'Extra variables to pass to the playbook (one per line, format: key=value)'
         )
-        choice(
-            name: 'INTERACTIVE_MODE',
-            choices: ['auto', 'interactive', 'non-interactive'],
-            description: 'How to handle interactive playbooks: auto (detect and handle), interactive (full terminal), non-interactive (disable prompts)'
-        )
+
     }
 
     options {
@@ -173,33 +169,7 @@ var3=value3''',
             }
         }
 
-        stage('Handle Interactive Input') {
-            when {
-                allOf {
-                    expression { params.PLAYBOOK != 'Update Inventory and Playbooks List' }
-                    expression { params.PROMPT_FOR_INPUT }
-                }
-            }
-            steps {
-                script {
-                    echo "🎯 Interactive input enabled for playbook: ${params.PLAYBOOK}"
-                    
-                    def userInput = input(
-                        message: 'Provide additional configuration for the playbook:',
-                        parameters: [
-                            text(
-                                name: 'CUSTOM_VARS',
-                                defaultValue: '',
-                                description: 'Additional variables (one per line, format: key=value)'
-                            )
-                        ]
-                    )
-                    
-                    env.CUSTOM_VARS = userInput
-                    echo "✅ Custom variables received: ${userInput}"
-                }
-            }
-        }
+
 
         stage('Validate Playbook') {
             when {
