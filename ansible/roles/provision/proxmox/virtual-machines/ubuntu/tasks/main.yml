@@ -70,7 +70,7 @@
   when: vm_start_after_create
 
 - name: Wait for QEMU guest agent
-  command: qm guest ping {{ vm_id }}
+  command: qm guest cmd {{ vm_id }} ping
   register: guest_agent_check
   until: guest_agent_check.rc == 0
   retries: "{{ vm_wait_timeout // 10 }}"

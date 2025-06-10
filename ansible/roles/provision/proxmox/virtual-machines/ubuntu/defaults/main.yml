@@ -1,6 +1,6 @@
 ---
 # VM Basic Configuration
-vm_id: "{{ vm_prefix_id + 1010 }}"
+vm_id: "{{ vm_prefix_id + 1000 + (range(1, 1000) | random) }}"
 vm_template_id: "{{ vm_prefix_id + 10 }}"
 vm_template: "ubuntu-noble-template"
 vm_name: "vm-{{ vm_id}}"
