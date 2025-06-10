@@ -73,12 +73,6 @@
     group: "{{ docker_file_group }}"
     mode: "0755"
 
-- name: Stop existing docker-compose services
-  shell: |
-    cd {{ dest_path }}
-    docker-compose down
-  ignore_errors: true
-  when: dest_path is defined
 
 - name: Copy application directory
   copy:
@@ -122,6 +116,13 @@
   when: 
     - env_example_stat.stat.exists
     - not env_stat.stat.exists
+
+- name: Stop existing docker-compose services
+  shell: |
+    cd {{ dest_path }}
+    docker-compose down
+  ignore_errors: true
+  when: dest_path is defined
 
 - name: Start docker-compose services
   shell: |
