@@ -10,7 +10,7 @@
 
 - name: Calculate repository root path
   set_fact:
-    repo_root: "{{ inventory_dir }}/.."
+    repo_root: "{{ inventory_dir }}/../.."
     dest_path: "{{ docker_dest_dir }}/{{ docker_app_dir }}"
 
 - name: Debug workspace structure
@@ -51,12 +51,12 @@
   register: source_dir_stat
   become: false
 
-- name: Debug stat result
+- name: Debug final paths
   debug:
     msg:
-      - "Stat result: {{ source_dir_stat }}"
-      - "Exists: {{ source_dir_stat.stat.exists | default('undefined') }}"
-      - "Is directory: {{ source_dir_stat.stat.isdir | default('undefined') }}"
+      - "Repository root: {{ repo_root }}"
+      - "Source path: {{ repo_root }}/docker-apps/{{ docker_app_dir }}"
+      - "Directory exists: {{ source_dir_stat.stat.exists }}"
   delegate_to: localhost
   become: false
 
