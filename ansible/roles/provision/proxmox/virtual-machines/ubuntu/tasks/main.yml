@@ -3,7 +3,7 @@
 - name: Display final VM configuration
   debug:
     msg:
-    - "📋 Final VM Configuration:"
+    - "Final VM Configuration:"
     - "========================"
     - "VM Name (vm_name): {{ vm_name }}"
     - "VM ID (vm_id): {{ vm_id }}"
@@ -80,7 +80,7 @@
 - name: Display VM creation summary
   debug:
     msg: |
-      - "✅ VM Creation Complete!"
+      - "VM Creation Complete!"
       - "VM Name: {{ vm_name }}"
       - "VM ID: {{ vm_id }}"
       - "Configuration: {{ vm_cores }} vCPU, {{ vm_memory }}MB RAM, {{ vm_disk_size }} disk"

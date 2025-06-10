@@ -1,5 +1,5 @@
 ---
 - name: Delete template
-  command: qm destroy {{ vm_id }} --purge
+  command: qm destroy {{ vm_template_id }} --purge
   changed_when: true
   when: template_check.rc == 0

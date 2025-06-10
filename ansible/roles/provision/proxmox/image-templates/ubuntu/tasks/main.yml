@@ -2,7 +2,7 @@
 - name: Check if template already exists
   shell: |
     cat /etc/pve/.vmlist | \
-    grep -e "^\"{{ vm_id }}\""
+    grep -e "^\"{{ vm_template_id }}\""
   register: template_check
   failed_when: false
   become: yes
