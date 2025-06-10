@@ -6,14 +6,3 @@ token_secret: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
 
 filters:
   - status = "running"
-
-keyed_groups:
-  - key: proxmox_tags
-    separator: "_"
-    prefix: tag
-  - key: proxmox_status
-    separator: "_"
-    prefix: status
-  - key: proxmox_node
-    separator: "_"
-    prefix: node
