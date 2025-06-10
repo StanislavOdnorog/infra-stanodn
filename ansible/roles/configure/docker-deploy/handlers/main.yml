@@ -1,0 +1,29 @@
+---
+# Docker Deploy Role Handlers
+
+- name: Stop Docker Compose services
+  community.docker.docker_compose:
+    project_src: "{{ docker_deploy_path }}"
+    state: absent
+    remove_orphans: "{{ docker_remove_orphans }}"
+  ignore_errors: true
+
+- name: Restart Docker Compose services
+  community.docker.docker_compose:
+    project_src: "{{ docker_deploy_path }}"
+    state: present
+    pull: "{{ docker_pull_images }}"
+    remove_orphans: "{{ docker_remove_orphans }}"
+    project_name: "{{ docker_project_name }}"
+
+- name: Start Docker Compose services
+  community.docker.docker_compose:
+    project_src: "{{ docker_deploy_path }}"
+    state: present
+    pull: "{{ docker_pull_images }}"
+    remove_orphans: "{{ docker_remove_orphans }}"
+    project_name: "{{ docker_project_name }}"
+
+- name: docker-compose-started
+  debug:
+    msg: "Docker Compose services have been started" 

@@ -1,0 +1,98 @@
+---
+# Docker Deploy Role Tasks
+
+- name: Validate directory name provided
+  assert:
+    that:
+      - docker_app_dir is defined
+      - docker_app_dir != ""
+    fail_msg: "docker_app_dir must be specified"
+
+- name: Set source and destination paths
+  set_fact:
+    source_path: "{{ docker_apps_base }}/{{ docker_app_dir }}"
+    dest_path: "{{ docker_dest_dir }}/{{ docker_app_dir }}"
+
+- name: Check if source directory exists
+  local_action:
+    module: stat
+    path: "{{ source_path }}"
+  register: source_dir_stat
+  become: false
+
+- name: Fail if source directory doesn't exist
+  fail:
+    msg: "Source directory {{ source_path }} does not exist"
+  when: not source_dir_stat.stat.exists
+
+- name: Create docker applications directory
+  file:
+    path: "{{ docker_dest_dir }}"
+    state: directory
+    owner: "{{ docker_file_owner }}"
+    group: "{{ docker_file_group }}"
+    mode: "0755"
+
+- name: Stop existing docker-compose services
+  shell: |
+    cd {{ dest_path }}
+    docker-compose down
+  ignore_errors: true
+  when: dest_path is defined
+
+- name: Copy application directory
+  copy:
+    src: "{{ source_path }}/"
+    dest: "{{ dest_path }}/"
+    owner: "{{ docker_file_owner }}"
+    group: "{{ docker_file_group }}"
+    mode: "0644"
+    directory_mode: "0755"
+
+- name: Copy .env.example to .env if exists and .env doesn't exist
+  copy:
+    src: "{{ dest_path }}/.env.example"
+    dest: "{{ dest_path }}/.env"
+    remote_src: true
+    owner: "{{ docker_file_owner }}"
+    group: "{{ docker_file_group }}"
+    mode: "0644"
+  when: 
+    - ansible_stat_result.stat.exists is defined
+  ignore_errors: true
+
+- name: Check if .env.example exists
+  stat:
+    path: "{{ dest_path }}/.env.example"
+  register: env_example_stat
+
+- name: Check if .env already exists
+  stat:
+    path: "{{ dest_path }}/.env"
+  register: env_stat
+
+- name: Copy .env.example to .env if needed
+  copy:
+    src: "{{ dest_path }}/.env.example"
+    dest: "{{ dest_path }}/.env"
+    remote_src: true
+    owner: "{{ docker_file_owner }}"
+    group: "{{ docker_file_group }}"
+    mode: "0644"
+  when: 
+    - env_example_stat.stat.exists
+    - not env_stat.stat.exists
+
+- name: Start docker-compose services
+  shell: |
+    cd {{ dest_path }}
+    docker-compose up -d
+  notify: docker-compose-started
+
+- name: Display deployment summary
+  debug:
+    msg:
+      - "🐳 Docker Deployment Complete!"
+      - "App: {{ docker_app_dir }}"
+      - "Location: {{ dest_path }}"
+      - "Manage: cd {{ dest_path }} && docker-compose [up|down|logs]" 

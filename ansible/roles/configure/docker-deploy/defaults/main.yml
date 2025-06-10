@@ -1,0 +1,43 @@
+---
+# Docker Deploy Role Defaults
+
+# Source directory name (just the directory name, not full path)
+docker_app_dir: ""
+
+# Base path where docker apps are stored in the repository
+docker_apps_base: "docker-apps"
+
+# Destination directory on target host
+docker_dest_dir: "/opt/docker-apps"
+
+# User for deployed files
+docker_file_owner: "{{ ansible_user }}"
+docker_file_group: "{{ ansible_user }}"
+
+# Application name (will be used for subdirectory)
+docker_app_name: "{{ docker_source_dir | basename }}"
+
+# Full deployment path
+docker_deploy_path: "{{ docker_dest_dir }}/{{ docker_app_name }}"
+
+# Docker Compose file name
+docker_compose_file: "docker-compose.yml"
+
+# Whether to pull images before starting
+docker_pull_images: true
+
+# Whether to remove orphaned containers
+docker_remove_orphans: true
+
+# Docker Compose project name (optional)
+docker_project_name: "{{ docker_app_name }}"
+
+# File permissions
+docker_file_mode: "0644"
+docker_dir_mode: "0755"
+
+# Whether to backup existing deployment before updating
+docker_backup_existing: true
+
+# Backup directory
+docker_backup_dir: "{{ docker_dest_dir }}/backups" 

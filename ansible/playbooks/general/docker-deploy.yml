@@ -1,0 +1,46 @@
+---
+- name: Deploy Docker Application
+  hosts: "{{ target }}"
+  become: yes
+  vars_files:
+    - ../../group_vars/all.yml
+
+  pre_tasks:
+    - name: Validate app directory parameter
+      fail:
+        msg: |
+          Please specify an app directory using:
+          --extra-vars "app_dir=your-app-name target=server1"
+          
+          Example:
+          ansible-playbook playbooks/general/docker-deploy.yml \
+            --extra-vars "app_dir=nginx-example target=monitoring"
+      when: app_dir is not defined or app_dir == ""
+
+    - name: Display deployment info
+      debug:
+        msg:
+          - "🐳 Deploying Docker App: {{ app_dir }}"
+          - "📁 Source: docker-apps/{{ app_dir }}"
+          - "🎯 Target: {{ target }}"
+          - "📍 Destination: /opt/docker-apps/{{ app_dir }}"
+
+  tasks:
+    - name: Deploy Docker application
+      include_role:
+        name: configure/docker-deploy
+      vars:
+        docker_app_dir: "{{ app_dir }}"
+
+  post_tasks:
+    - name: Show management commands
+      debug:
+        msg:
+          - "🎉 Deployment complete!"
+          - ""
+          - "To manage your app:"
+          - "  ssh {{ target }}"
+          - "  cd /opt/docker-apps/{{ app_dir }}"
+          - "  docker-compose logs    # View logs"
+          - "  docker-compose down   # Stop app"
+          - "  docker-compose up -d  # Start app" 

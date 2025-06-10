@@ -1,0 +1,14 @@
+---
+# Docker Role Handlers
+
+- name: Start and enable Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Restart Docker
+  systemd:
+    name: docker
+    state: restarted
+    enabled: yes 

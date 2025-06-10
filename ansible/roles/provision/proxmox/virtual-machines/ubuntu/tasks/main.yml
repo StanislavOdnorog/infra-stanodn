@@ -1,4 +1,8 @@
 ---
+- name: Set vm_id for VM
+  set_fact:
+    vm_id: "{{ vm_prefix_id + 1000 + (range(1, 1000) | random) }}"
+  when: vm_id is not defined
 
 - name: Display final VM configuration
   debug:
