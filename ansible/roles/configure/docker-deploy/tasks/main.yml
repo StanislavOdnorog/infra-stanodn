@@ -33,23 +33,28 @@
     group: "{{ docker_file_group }}"
     mode: "0755"
 
-- name: Copy entire application directory
-  synchronize:
-    src: "{{ repo_root }}/docker-apps/{{ docker_app_dir }}/"
-    dest: "{{ dest_path }}/"
-    owner: false
-    group: false
-    delete: true
-    recursive: true
+- name: Create temporary archive of application directory
+  archive:
+    path: "{{ repo_root }}/docker-apps/{{ docker_app_dir }}"
+    dest: "/tmp/{{ docker_app_dir }}.tar.gz"
+    format: gz
   delegate_to: localhost
   become: false
 
-- name: Set proper ownership
-  file:
-    path: "{{ dest_path }}"
+- name: Copy and extract application directory
+  unarchive:
+    src: "/tmp/{{ docker_app_dir }}.tar.gz"
+    dest: "{{ docker_dest_dir }}/"
     owner: "{{ docker_file_owner }}"
     group: "{{ docker_file_group }}"
-    recurse: true
+    mode: "u=rwX,g=rX,o=rX"
+
+- name: Clean up temporary archive
+  file:
+    path: "/tmp/{{ docker_app_dir }}.tar.gz"
+    state: absent
+  delegate_to: localhost
+  become: false
 
 - name: Check if .env.example exists
   stat:
