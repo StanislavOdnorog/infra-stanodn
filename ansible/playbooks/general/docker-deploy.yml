@@ -20,10 +20,10 @@
     - name: Display deployment info
       debug:
         msg:
-          - "🐳 Deploying Docker App: {{ app_dir }}"
-          - "📁 Source: docker-apps/{{ app_dir }}"
-          - "🎯 Target: {{ target }}"
-          - "📍 Destination: /opt/docker-apps/{{ app_dir }}"
+          - "Deploying Docker App: {{ app_dir }}"
+          - "Source: docker-apps/{{ app_dir }}"
+          - "Target: {{ target }}"
+          - "Destination: /opt/docker-apps/{{ app_dir }}"
 
   tasks:
     - name: Deploy Docker application
@@ -36,7 +36,7 @@
     - name: Show management commands
       debug:
         msg:
-          - "🎉 Deployment complete!"
+          - "Deployment complete!"
           - ""
           - "To manage your app:"
           - "  ssh {{ target }}"

@@ -3,6 +3,6 @@
   hosts: "{{ target }}"
   become: yes
   vars_files:
-    - ../group_vars/users.yml
+    - ../../group_vars/users.yml
   roles:
-    - ../roles/configure/sync_users
+    - configure/sync_users
