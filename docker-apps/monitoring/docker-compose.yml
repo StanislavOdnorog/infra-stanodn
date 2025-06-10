@@ -19,7 +19,7 @@ services:
     ports:
       - 9090:9090
     networks:
-      - cosmos-monitoring
+      - monitoring
     restart: always
 
   # default login credentials: admin/admin
@@ -28,7 +28,7 @@ services:
     env_file: ./grafana/grafana.conf
     container_name: grafana
     networks:
-      - cosmos-monitoring
+      - monitoring
     expose:
       - 3000
     volumes:
