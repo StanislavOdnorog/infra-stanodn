@@ -8,30 +8,30 @@
       - docker_app_dir != ""
     fail_msg: "docker_app_dir must be specified"
 
-- name: Set source and destination paths
+- name: Calculate repository root path
   set_fact:
-    source_path: "{{ docker_apps_base }}/{{ docker_app_dir }}"
+    repo_root: "{{ inventory_dir }}/.."
     dest_path: "{{ docker_dest_dir }}/{{ docker_app_dir }}"
 
 - name: Debug paths
   debug:
     msg:
-      - "Current playbook directory: {{ playbook_dir }}"
-      - "Source path: {{ source_path }}"
-      - "Absolute source path: {{ playbook_dir }}/{{ source_path }}"
+      - "Inventory directory: {{ inventory_dir }}"
+      - "Repository root: {{ repo_root }}"
+      - "Source path: {{ repo_root }}/docker-apps/{{ docker_app_dir }}"
   delegate_to: localhost
   become: false
 
 - name: Check if source directory exists
   local_action:
     module: stat
-    path: "{{ playbook_dir }}/../docker-apps/{{ docker_app_dir }}"
+    path: "{{ repo_root }}/docker-apps/{{ docker_app_dir }}"
   register: source_dir_stat
   become: false
 
 - name: Fail if source directory doesn't exist
   fail:
-    msg: "Source directory {{ playbook_dir }}/../docker-apps/{{ docker_app_dir }} does not exist"
+    msg: "Source directory {{ repo_root }}/docker-apps/{{ docker_app_dir }} does not exist"
   when: not source_dir_stat.stat.exists
 
 - name: Create docker applications directory
@@ -51,7 +51,7 @@
 
 - name: Copy application directory
   copy:
-    src: "{{ playbook_dir }}/../docker-apps/{{ docker_app_dir }}/"
+    src: "{{ repo_root }}/docker-apps/{{ docker_app_dir }}/"
     dest: "{{ dest_path }}/"
     owner: "{{ docker_file_owner }}"
     group: "{{ docker_file_group }}"
