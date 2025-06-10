@@ -16,7 +16,7 @@ node {
             if (jsonOutput && jsonOutput != '{}') {
                 def inventory = readJSON text: jsonOutput
                 
-                // Add all groups (top-level keys except _meta)
+                // Add all groups (top-level keys except _meta, all, and ungrouped)
                 inventory.keySet().each { key ->
                     if (key != 'all' && key != '_meta' && key != 'ungrouped') {
                         targetChoices << key
@@ -29,11 +29,17 @@ node {
                         targetChoices << host
                     }
                 }
+                
+                echo "Found ${targetChoices.size()} targets from inventory: ${targetChoices.join(', ')}"
+            } else {
+                echo "No inventory data available - using basic targets"
+                targetChoices << 'localhost'
             }
         }
     } catch (Exception e) {
         echo "Could not read inventory: ${e.message}"
-        targetChoices.addAll(['proxmox-cluster', 'custom-vms'])
+        echo "Using minimal target list"
+        targetChoices << 'localhost'
     }
     targetChoices = targetChoices.unique().sort()
 }
