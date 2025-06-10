@@ -1,0 +1,32 @@
+---
+- name: Ping Test - Check connectivity to hosts
+  hosts: "{{ target }}"
+  gather_facts: false
+  
+  tasks:
+    - name: Test connectivity with ping
+      ping:
+      register: ping_result
+      
+    - name: Display ping result
+      debug:
+        msg: "✅ Host {{ inventory_hostname }} is reachable!"
+      when: ping_result is succeeded
+      
+    - name: Gather basic facts after successful ping
+      setup:
+        gather_subset:
+          - '!all'
+          - '!any'
+          - network
+          - virtual
+      register: host_facts
+      
+    - name: Display basic host information
+      debug:
+        msg: |
+          Host: {{ inventory_hostname }}
+          IP Address: {{ ansible_default_ipv4.address | default('N/A') }}
+          OS Family: {{ ansible_os_family | default('N/A') }}
+          Virtualization: {{ ansible_virtualization_type | default('Physical') }}
+      when: host_facts is succeeded 
