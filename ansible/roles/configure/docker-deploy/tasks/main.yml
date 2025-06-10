@@ -13,12 +13,34 @@
     repo_root: "{{ inventory_dir }}/.."
     dest_path: "{{ docker_dest_dir }}/{{ docker_app_dir }}"
 
-- name: Debug paths
+- name: Debug workspace structure
   debug:
     msg:
-      - "Inventory directory: {{ inventory_dir }}"
-      - "Repository root: {{ repo_root }}"
-      - "Source path: {{ repo_root }}/docker-apps/{{ docker_app_dir }}"
+      - "Checking workspace structure..."
+  delegate_to: localhost
+  become: false
+
+- name: List inventory directory contents
+  local_action:
+    module: find
+    paths: "{{ inventory_dir }}"
+    file_type: any
+  register: inventory_contents
+  become: false
+
+- name: List repository root contents  
+  local_action:
+    module: find
+    paths: "{{ repo_root }}"
+    file_type: any
+  register: repo_contents
+  become: false
+
+- name: Show directory contents
+  debug:
+    msg:
+      - "Inventory dir ({{ inventory_dir }}) contents: {{ inventory_contents.files | map(attribute='path') | list }}"
+      - "Repo root ({{ repo_root }}) contents: {{ repo_contents.files | map(attribute='path') | list }}"
   delegate_to: localhost
   become: false
 
