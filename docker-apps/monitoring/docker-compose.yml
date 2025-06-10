@@ -29,8 +29,8 @@ services:
     container_name: grafana
     networks:
       - monitoring
-    expose:
-      - 3000
+    ports:
+      - 3000:3000
     volumes:
       - type: volume
         source: grafana_data
