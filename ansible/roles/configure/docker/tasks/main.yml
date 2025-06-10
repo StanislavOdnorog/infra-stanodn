@@ -57,6 +57,13 @@
   notify:
     - Start and enable Docker
 
+- name: Create docker-compose compatibility symlink
+  file:
+    src: /usr/libexec/docker/cli-plugins/docker-compose
+    dest: /usr/local/bin/docker-compose
+    state: link
+  when: ansible_os_family == "Debian"
+
 - name: Add user to docker group
   user:
     name: "{{ ansible_user }}"
