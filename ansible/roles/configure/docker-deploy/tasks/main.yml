@@ -42,6 +42,7 @@
     delete: true
     recursive: true
   delegate_to: localhost
+  become: false
 
 - name: Set proper ownership
   file:
