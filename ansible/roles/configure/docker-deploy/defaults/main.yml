@@ -4,8 +4,8 @@
 # Source directory name (just the directory name, not full path)
 docker_app_dir: ""
 
-# Base path where docker apps are stored in the repository
-docker_apps_base: "docker-apps"
+# Base path where docker apps are stored in the repository (relative to ansible directory)
+docker_apps_base: "../docker-apps"
 
 # Destination directory on target host
 docker_dest_dir: "/opt/docker-apps"
