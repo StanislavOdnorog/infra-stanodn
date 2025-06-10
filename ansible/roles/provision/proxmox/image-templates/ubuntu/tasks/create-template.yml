@@ -72,6 +72,9 @@
 - name: Configure network interface
   command: qm set {{ vm_id }} --net0 virtio,bridge={{ vm_net_bridge }},firewall=0
 
+- name: Enable start at boot
+  command: qm set {{ vm_id }} --onboot 1
+
 - name: Create temporary SSH key file for cloud-init
   copy:
     content: "{{ cloud_init_ssh_key }}"

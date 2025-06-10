@@ -31,10 +31,10 @@ node {
                     def inventory = readJSON text: jsonOutput
                     echo "✅ Successfully parsed inventory JSON with vault access"
                     
-                    // Add all groups (excluding _meta, all, ungrouped)
+                    // Add all groups (excluding _meta, all, ungrouped, and proxmox groups)
                     inventory.keySet().each { key ->
-                        if (key != 'all' && key != '_meta' && key != 'ungrouped') {
-                            targetChoices << key
+                        if (key != 'all' && key != '_meta' && key != 'ungrouped' && !key.startsWith('proxmox')) {
+                            targetChoices << "Group: " + key
                         }
                     }
                     
