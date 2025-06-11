@@ -88,83 +88,83 @@ var (
 		Help: "Current max priority fee per gas in wei",
 	})
 
-	// Block metrics
-	blockTime = prometheus.NewGauge(prometheus.GaugeOpts{
+	// Current block metrics (latest block only)
+	currentBlockGasUsed = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_current_block_gas_used",
+		Help: "Gas used in the current block",
+	})
+
+	currentBlockGasLimit = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_current_block_gas_limit",
+		Help: "Gas limit of the current block",
+	})
+
+	currentBlockGasUtilization = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_current_block_gas_utilization_percent",
+		Help: "Gas utilization percentage of the current block",
+	})
+
+	currentBlockSize = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_current_block_size_bytes",
+		Help: "Size of the current block in bytes",
+	})
+
+	currentBlockTransactionCount = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_current_block_transaction_count",
+		Help: "Number of transactions in the current block",
+	})
+
+	// Rolling averages (last 10 blocks)
+	avgBlockTime = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "monad_avg_block_time_seconds",
-		Help: "Average block time in seconds over recent blocks",
+		Help: "Average block time in seconds over last 10 blocks",
+	})
+
+	avgTransactionsPerBlock = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_avg_transactions_per_block",
+		Help: "Average transactions per block over last 10 blocks",
+	})
+
+	avgGasUtilization = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_avg_gas_utilization_percent",
+		Help: "Average gas utilization percentage over last 10 blocks",
+	})
+
+	avgGasPriceWei = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_avg_gas_price_wei",
+		Help: "Average gas price in wei over last 10 blocks",
+	})
+
+	// Transaction type metrics (aggregated)
+	transactionTypes = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "monad_transaction_types_last_10_blocks",
+		Help: "Count of different transaction types in last 10 blocks",
+	}, []string{"type"})
+
+	totalContractCalls = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_contract_calls_last_10_blocks",
+		Help: "Total number of contract calls in last 10 blocks",
+	})
+
+	totalSimpleTransfers = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_simple_transfers_last_10_blocks",
+		Help: "Total number of simple transfers in last 10 blocks",
+	})
+
+	avgUniqueAddressesPerBlock = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_avg_unique_addresses_per_block",
+		Help: "Average number of unique addresses per block over last 10 blocks",
+	})
+
+	totalValueTransferredWei = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "monad_total_value_transferred_wei_last_10_blocks",
+		Help: "Total value transferred in last 10 blocks (wei)",
 	})
 
 	transactionsPerSecond = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "monad_transactions_per_second",
 		Help: "Average transactions per second",
 	})
-
-	blockGasUsed = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_block_gas_used",
-		Help: "Gas used in the latest block",
-	}, []string{"block_number"})
-
-	blockGasLimit = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_block_gas_limit",
-		Help: "Gas limit of the latest block",
-	}, []string{"block_number"})
-
-	blockGasUtilization = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_block_gas_utilization_percent",
-		Help: "Gas utilization percentage of the latest block",
-	}, []string{"block_number"})
-
-	blockSize = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_block_size_bytes",
-		Help: "Size of the latest block in bytes",
-	}, []string{"block_number"})
-
-	blockTransactionCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_block_transaction_count",
-		Help: "Number of transactions in the latest block",
-	}, []string{"block_number"})
-
-	// Transaction metrics
-	transactionTypes = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_transaction_types",
-		Help: "Count of different transaction types in recent blocks",
-	}, []string{"type", "block_number"})
-
-	contractCalls = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_contract_calls",
-		Help: "Number of contract calls in recent blocks",
-	}, []string{"block_number"})
-
-	simpleTransfers = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_simple_transfers",
-		Help: "Number of simple transfers in recent blocks",
-	}, []string{"block_number"})
-
-	uniqueAddresses = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_unique_addresses",
-		Help: "Number of unique addresses in recent blocks",
-	}, []string{"block_number"})
-
-	totalValueTransferred = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_total_value_transferred_wei",
-		Help: "Total value transferred in recent blocks (wei)",
-	}, []string{"block_number"})
-
-	// Gas price statistics
-	avgGasPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_avg_gas_price_per_block_wei",
-		Help: "Average gas price per block in wei",
-	}, []string{"block_number"})
-
-	maxGasPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_max_gas_price_per_block_wei",
-		Help: "Maximum gas price per block in wei",
-	}, []string{"block_number"})
-
-	minGasPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "monad_min_gas_price_per_block_wei",
-		Help: "Minimum gas price per block in wei",
-	}, []string{"block_number"})
 
 	// Network health metrics
 	rpcResponseTime = prometheus.NewHistogram(prometheus.HistogramOpts{
@@ -195,32 +195,35 @@ var (
 	}, []string{"chain_id", "client_version", "network"})
 )
 
+// Create custom registry to avoid Go and process metrics
+var customRegistry = prometheus.NewRegistry()
+
 func init() {
-	// Register all metrics
-	prometheus.MustRegister(currentBlockNumber)
-	prometheus.MustRegister(gasPrice)
-	prometheus.MustRegister(gasPriceGwei)
-	prometheus.MustRegister(maxPriorityFeePerGas)
-	prometheus.MustRegister(blockTime)
-	prometheus.MustRegister(transactionsPerSecond)
-	prometheus.MustRegister(blockGasUsed)
-	prometheus.MustRegister(blockGasLimit)
-	prometheus.MustRegister(blockGasUtilization)
-	prometheus.MustRegister(blockSize)
-	prometheus.MustRegister(blockTransactionCount)
-	prometheus.MustRegister(transactionTypes)
-	prometheus.MustRegister(contractCalls)
-	prometheus.MustRegister(simpleTransfers)
-	prometheus.MustRegister(uniqueAddresses)
-	prometheus.MustRegister(totalValueTransferred)
-	prometheus.MustRegister(avgGasPrice)
-	prometheus.MustRegister(maxGasPrice)
-	prometheus.MustRegister(minGasPrice)
-	prometheus.MustRegister(rpcResponseTime)
-	prometheus.MustRegister(rpcErrors)
-	prometheus.MustRegister(lastBlockTimestamp)
-	prometheus.MustRegister(metricsCollectionTime)
-	prometheus.MustRegister(chainInfo)
+	// Register only Monad-specific metrics with custom registry
+	customRegistry.MustRegister(currentBlockNumber)
+	customRegistry.MustRegister(gasPrice)
+	customRegistry.MustRegister(gasPriceGwei)
+	customRegistry.MustRegister(maxPriorityFeePerGas)
+	customRegistry.MustRegister(currentBlockGasUsed)
+	customRegistry.MustRegister(currentBlockGasLimit)
+	customRegistry.MustRegister(currentBlockGasUtilization)
+	customRegistry.MustRegister(currentBlockSize)
+	customRegistry.MustRegister(currentBlockTransactionCount)
+	customRegistry.MustRegister(avgBlockTime)
+	customRegistry.MustRegister(avgTransactionsPerBlock)
+	customRegistry.MustRegister(avgGasUtilization)
+	customRegistry.MustRegister(avgGasPriceWei)
+	customRegistry.MustRegister(transactionTypes)
+	customRegistry.MustRegister(totalContractCalls)
+	customRegistry.MustRegister(totalSimpleTransfers)
+	customRegistry.MustRegister(avgUniqueAddressesPerBlock)
+	customRegistry.MustRegister(totalValueTransferredWei)
+	customRegistry.MustRegister(transactionsPerSecond)
+	customRegistry.MustRegister(rpcResponseTime)
+	customRegistry.MustRegister(rpcErrors)
+	customRegistry.MustRegister(lastBlockTimestamp)
+	customRegistry.MustRegister(metricsCollectionTime)
+	customRegistry.MustRegister(chainInfo)
 }
 
 func NewMonadClient(url string) *MonadClient {
@@ -379,21 +382,33 @@ func (c *MonadClient) CollectMetrics(ctx context.Context) error {
 	}
 
 	// Analyze recent blocks for detailed metrics
-	const blocksToAnalyze = 10
-	var blockTimes []float64
+	const blocksToAnalyze = 5
 	var totalTxs int
+	var totalGasUsed, totalGasLimit uint64
+	var totalContractCallsCount, totalSimpleTransfersCount int
+	var totalUniqueAddresses int
+	var totalValue, totalGasPrice uint64
+	var totalGasPriceCount int
+	txTypeCountTotal := make(map[string]int)
 
 	for i := 0; i < blocksToAnalyze; i++ {
 		blockNum := currentBlock - uint64(i)
 		blockHex := fmt.Sprintf("0x%x", blockNum)
 		
+		// Add delay to avoid rate limiting
+		if i > 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+		
 		block, err := c.GetBlock(blockHex, true)
 		if err != nil {
 			log.Printf("Failed to get block %d: %v", blockNum, err)
+			// If rate limited, try to continue with fewer blocks
+			if strings.Contains(err.Error(), "Too many request") {
+				time.Sleep(500 * time.Millisecond)
+			}
 			continue
 		}
-
-		blockNumStr := fmt.Sprintf("%d", blockNum)
 		
 		// Block metrics
 		gasUsed := hexToUint64(block.GasUsed)
@@ -402,60 +417,46 @@ func (c *MonadClient) CollectMetrics(ctx context.Context) error {
 		size := hexToUint64(block.Size)
 		txCount := len(block.Transactions)
 
-		blockGasUsed.WithLabelValues(blockNumStr).Set(float64(gasUsed))
-		blockGasLimit.WithLabelValues(blockNumStr).Set(float64(gasLimit))
-		blockSize.WithLabelValues(blockNumStr).Set(float64(size))
-		blockTransactionCount.WithLabelValues(blockNumStr).Set(float64(txCount))
-
-		if gasLimit > 0 {
-			utilization := float64(gasUsed) / float64(gasLimit) * 100
-			blockGasUtilization.WithLabelValues(blockNumStr).Set(utilization)
-		}
-
-		// Set last block timestamp for the most recent block
+		// For current block (i == 0), set current metrics
 		if i == 0 {
+			currentBlockGasUsed.Set(float64(gasUsed))
+			currentBlockGasLimit.Set(float64(gasLimit))
+			currentBlockSize.Set(float64(size))
+			currentBlockTransactionCount.Set(float64(txCount))
+
+			if gasLimit > 0 {
+				utilization := float64(gasUsed) / float64(gasLimit) * 100
+				currentBlockGasUtilization.Set(utilization)
+			}
+
 			lastBlockTimestamp.Set(float64(timestamp))
 		}
 
-		// Calculate block time
-		if i > 0 {
-			prevBlockNum := currentBlock - uint64(i-1)
-			prevBlockHex := fmt.Sprintf("0x%x", prevBlockNum)
-			prevBlock, err := c.GetBlock(prevBlockHex, false)
-			if err == nil {
-				prevTimestamp := hexToUint64(prevBlock.Timestamp)
-				if timestamp < prevTimestamp {
-					blockTimeDiff := float64(prevTimestamp - timestamp)
-					blockTimes = append(blockTimes, blockTimeDiff)
-				}
-			}
-		}
-
+		// Accumulate for averages
+		totalGasUsed += gasUsed
+		totalGasLimit += gasLimit
 		totalTxs += txCount
+
+		// Store timestamp for block time calculation
+		if i == 0 {
+			// This is the current block, store its timestamp for comparison
+			// We'll calculate block times outside this loop
+		}
 
 		// Transaction analysis
 		if txCount > 0 {
-			var totalGasPrice, totalValue uint64
-			var maxGas, minGas uint64
 			var contractCallCount, simpleTransferCount int
 			uniqueAddrs := make(map[string]bool)
-			txTypeCount := make(map[string]int)
 
-			for j, tx := range block.Transactions {
+			for _, tx := range block.Transactions {
 				// Gas price analysis
 				txGasPrice := hexToUint64(tx.GasPrice)
 				if txGasPrice == 0 {
 					txGasPrice = hexToUint64(tx.MaxFeePerGas)
 				}
 
-				if j == 0 || txGasPrice > maxGas {
-					maxGas = txGasPrice
-				}
-				if j == 0 || txGasPrice < minGas {
-					minGas = txGasPrice
-				}
-
 				totalGasPrice += txGasPrice
+				totalGasPriceCount++
 				totalValue += hexToUint64(tx.Value)
 
 				// Address tracking
@@ -478,7 +479,7 @@ func (c *MonadClient) CollectMetrics(ctx context.Context) error {
 						txType = "unknown"
 					}
 				}
-				txTypeCount[txType]++
+				txTypeCountTotal[txType]++
 
 				// Contract call vs simple transfer
 				if tx.Input != "0x" && len(tx.Input) > 2 {
@@ -488,36 +489,86 @@ func (c *MonadClient) CollectMetrics(ctx context.Context) error {
 				}
 			}
 
-			// Set metrics
-			avgGasPrice.WithLabelValues(blockNumStr).Set(float64(totalGasPrice / uint64(txCount)))
-			maxGasPrice.WithLabelValues(blockNumStr).Set(float64(maxGas))
-			minGasPrice.WithLabelValues(blockNumStr).Set(float64(minGas))
-			contractCalls.WithLabelValues(blockNumStr).Set(float64(contractCallCount))
-			simpleTransfers.WithLabelValues(blockNumStr).Set(float64(simpleTransferCount))
-			uniqueAddresses.WithLabelValues(blockNumStr).Set(float64(len(uniqueAddrs)))
-			totalValueTransferred.WithLabelValues(blockNumStr).Set(float64(totalValue))
-
-			// Transaction type metrics
-			for txType, count := range txTypeCount {
-				transactionTypes.WithLabelValues(txType, blockNumStr).Set(float64(count))
-			}
+			totalContractCallsCount += contractCallCount
+			totalSimpleTransfersCount += simpleTransferCount
+			totalUniqueAddresses += len(uniqueAddrs)
 		}
 	}
 
-	// Calculate average block time and TPS
-	if len(blockTimes) > 0 {
-		var sum float64
-		for _, bt := range blockTimes {
-			sum += bt
+	// Set aggregated metrics
+	if blocksToAnalyze > 0 {
+		avgTransactionsPerBlock.Set(float64(totalTxs) / float64(blocksToAnalyze))
+		
+		if totalGasLimit > 0 {
+			avgGasUtilization.Set(float64(totalGasUsed) / float64(totalGasLimit) * 100)
 		}
-		avgBlockTime := sum / float64(len(blockTimes))
-		blockTime.Set(avgBlockTime)
+		
+		if totalGasPriceCount > 0 {
+			avgGasPriceWei.Set(float64(totalGasPrice) / float64(totalGasPriceCount))
+		}
 
-		// Calculate TPS
-		if avgBlockTime > 0 {
-			avgTxsPerBlock := float64(totalTxs) / float64(blocksToAnalyze)
-			tps := avgTxsPerBlock / avgBlockTime
-			transactionsPerSecond.Set(tps)
+		avgUniqueAddressesPerBlock.Set(float64(totalUniqueAddresses) / float64(blocksToAnalyze))
+	}
+
+	totalContractCalls.Set(float64(totalContractCallsCount))
+	totalSimpleTransfers.Set(float64(totalSimpleTransfersCount))
+	totalValueTransferredWei.Set(float64(totalValue))
+
+	// Set transaction type metrics
+	for txType, count := range txTypeCountTotal {
+		transactionTypes.WithLabelValues(txType).Set(float64(count))
+	}
+
+	// Calculate average block time using a simpler approach
+	// Get the first and last block timestamps to calculate average block time
+	if blocksToAnalyze > 1 {
+		firstBlockNum := currentBlock - uint64(blocksToAnalyze-1)
+		firstBlockHex := fmt.Sprintf("0x%x", firstBlockNum)
+		
+		// Get first block with minimal data (no transactions)
+		firstResult, err := c.makeRequest("eth_getBlockByNumber", []interface{}{firstBlockHex, false})
+		if err == nil {
+			firstBlockData, err := json.Marshal(firstResult)
+			if err == nil {
+				var firstBlockSimple struct {
+					Timestamp string `json:"timestamp"`
+				}
+				if err := json.Unmarshal(firstBlockData, &firstBlockSimple); err == nil {
+					firstTimestamp := hexToUint64(firstBlockSimple.Timestamp)
+					
+					// Get current block timestamp
+					currentBlockHex := fmt.Sprintf("0x%x", currentBlock)
+					currentResult, err := c.makeRequest("eth_getBlockByNumber", []interface{}{currentBlockHex, false})
+					if err == nil {
+						currentBlockData, err := json.Marshal(currentResult)
+						if err == nil {
+							var currentBlockSimple struct {
+								Timestamp string `json:"timestamp"`
+							}
+							if err := json.Unmarshal(currentBlockData, &currentBlockSimple); err == nil {
+								currentTimestamp := hexToUint64(currentBlockSimple.Timestamp)
+								
+								if currentTimestamp > firstTimestamp {
+									totalTime := float64(currentTimestamp - firstTimestamp)
+									avgBlockTimeValue := totalTime / float64(blocksToAnalyze-1)
+									avgBlockTime.Set(avgBlockTimeValue)
+									
+									log.Printf("Block time calculation: Current block %d (ts: %d), First block %d (ts: %d), Total time: %f, Avg: %f", 
+										currentBlock, currentTimestamp, firstBlockNum, firstTimestamp, totalTime, avgBlockTimeValue)
+									
+									// Calculate TPS
+									if avgBlockTimeValue > 0 {
+										avgTxsPerBlock := float64(totalTxs) / float64(blocksToAnalyze)
+										tps := avgTxsPerBlock / avgBlockTimeValue
+										transactionsPerSecond.Set(tps)
+										log.Printf("TPS calculation: Total txs %d, Avg txs per block: %f, TPS: %f", totalTxs, avgTxsPerBlock, tps)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -527,8 +578,8 @@ func (c *MonadClient) CollectMetrics(ctx context.Context) error {
 func main() {
 	client := NewMonadClient("https://monad-testnet.drpc.org")
 
-	// Set up HTTP server
-	http.Handle("/metrics", promhttp.Handler())
+	// Set up HTTP server with custom registry (no Go/process metrics)
+	http.Handle("/metrics", promhttp.HandlerFor(customRegistry, promhttp.HandlerOpts{}))
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -556,20 +607,20 @@ func main() {
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Monad Testnet Prometheus Exporter</h1>
+        <h1>Monad Testnet Prometheus Exporter</h1>
         
         <div class="info">
-            <strong>🎯 Purpose:</strong> This service exports comprehensive Monad blockchain metrics in Prometheus format for monitoring and alerting.
+            <strong>Purpose:</strong> This service exports comprehensive Monad blockchain metrics in Prometheus format for monitoring and alerting.
         </div>
 
-        <h2>📊 Available Endpoints</h2>
+        <h2>Available Endpoints</h2>
         <ul>
             <li><a href="/metrics"><strong>/metrics</strong></a> - Prometheus metrics endpoint</li>
             <li><a href="/health"><strong>/health</strong></a> - Health check endpoint</li>
         </ul>
 
         <div class="metrics-list">
-            <h3>📈 Exported Metrics Categories</h3>
+            <h3>Exported Metrics Categories</h3>
             <ul>
                 <li><strong>Network Metrics:</strong> Block height, gas prices, block times, TPS</li>
                 <li><strong>Block Analysis:</strong> Gas utilization, transaction counts, block sizes</li>
@@ -582,12 +633,12 @@ func main() {
         </div>
 
         <div class="info">
-            <strong>🔄 Update Frequency:</strong> Metrics are collected every 30 seconds automatically.<br>
-            <strong>🌐 Network:</strong> Monad Testnet (Chain ID: 10143)<br>
-            <strong>📡 RPC Endpoint:</strong> https://monad-testnet.drpc.org
+            <strong>Update Frequency:</strong> Metrics are collected every 30 seconds automatically.<br>
+            <strong>Network:</strong> Monad Testnet (Chain ID: 10143)<br>
+            <strong>RPC Endpoint:</strong> https://monad-testnet.drpc.org
         </div>
 
-        <h3>🐳 Prometheus Configuration Example</h3>
+        <h3>Prometheus Configuration Example</h3>
         <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;">
 scrape_configs:
   - job_name: 'monad-exporter'
@@ -608,22 +659,22 @@ scrape_configs:
 			if err := client.CollectMetrics(ctx); err != nil {
 				log.Printf("Error collecting metrics: %v", err)
 			}
-			time.Sleep(30 * time.Second) // Collect metrics every 30 seconds
+			time.Sleep(60 * time.Second) // Collect metrics every 60 seconds
 		}
 	}()
 
 	// Initial metrics collection
-	log.Println("🚀 Starting Monad Testnet Prometheus Exporter...")
+	log.Println("Starting Monad Testnet Prometheus Exporter...")
 	if err := client.CollectMetrics(ctx); err != nil {
-		log.Printf("⚠️  Initial metrics collection failed: %v", err)
+		log.Printf("Initial metrics collection failed: %v", err)
 	} else {
-		log.Println("✅ Initial metrics collected successfully")
+		log.Println("Initial metrics collected successfully")
 	}
 
-	log.Println("📊 Prometheus metrics available at: http://localhost:8080/metrics")
-	log.Println("🏥 Health check available at: http://localhost:8080/health")
-	log.Println("🌐 Dashboard available at: http://localhost:8080/")
-	log.Println("🔄 Metrics update every 30 seconds")
+	log.Println("Prometheus metrics available at: http://localhost:8080/metrics")
+	log.Println("Health check available at: http://localhost:8080/health")
+	log.Println("Dashboard available at: http://localhost:8080/")
+	log.Println("Metrics update every 60 seconds")
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 } 
