@@ -1,0 +1,627 @@
+{
+  "id": null,
+  "uid": "monad-all-metrics-dashboard",
+  "title": "Monad Network Dashboard",
+  "tags": ["monad", "exporter", "all-metrics"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 2,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "options": {
+        "mode": "html",
+        "content": "<style>@import url('/public/branding/custom-branding.css');</style><script>setTimeout(function(){var link=document.createElement('link');link.rel='stylesheet';link.href='/public/branding/custom-branding.css';document.head.appendChild(link);},500);</script>"
+      },
+      "transparent": true
+    },
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {"h": 5, "w": 24, "x": 0, "y": 1},
+      "options": {
+        "mode": "html",
+        "content": "<div style='text-align: center; font-size: 3rem; font-weight: bold; color: white; text-shadow: 0 0 15px rgba(255, 255, 255, 0.4); padding: 30px; background: linear-gradient(135deg, #131835 0%, #101a33 50%, #101936 100%); border-radius: 12px; border: 1px solid #0e1532; position: relative;'><div style='position: absolute; top: 15px; left: 30px; width: 60px; height: 60px); background-size: contain; background-repeat: no-repeat;'></div>MONAD NETWORK DASHBOARD<div style='font-size: 0.4em; margin-top: 10px; color: #999; font-weight: normal;'>Powered by [NODERS] </div></div>"
+      }
+    },
+    {
+      "type": "row",
+      "title": "Core Network Status",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 4},
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Network Version",
+      "targets": [{"expr": "monad_network_version", "refId": "A"}],
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 5},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#131835", "value": null}
+            ]
+          },
+          "custom": {
+            "displayMode": "basic"
+          },
+          "displayName": "Network Version",
+          "decimals": 0,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Chain ID",
+      "targets": [{"expr": "monad_chain_id", "refId": "A"}],
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 5},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#101a33", "value": null}
+            ]
+          },
+          "displayName": "Chain ID",
+          "decimals": 0,
+          "unit": "short",
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Sync Status",
+      "targets": [{"expr": "monad_is_syncing", "refId": "A"}],
+      "gridPos": {"h": 6, "w": 6, "x": 12, "y": 5},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "white", "value": 0},
+              {"color": "#0e1532", "value": 1}
+            ]
+          },
+          "mappings": [
+            {"options": {"0": {"text": "Synced"}}, "type": "value"},
+            {"options": {"1": {"text": "Syncing"}}, "type": "value"}
+          ]
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Current Block",
+      "targets": [{"expr": "monad_block_number", "refId": "A"}],
+      "gridPos": {"h": 6, "w": 6, "x": 18, "y": 5},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#101936", "value": null}
+            ]
+          },
+          "unit": "locale",
+          "displayName": "Block Number",
+          "decimals": 0,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Gas & Performance Metrics",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 11},
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Block Gas Usage Over Time",
+      "targets": [
+        {"expr": "monad_block_gas_used", "refId": "A", "legendFormat": "Gas Used ({{__value__}})"},
+        {"expr": "monad_block_gas_limit", "refId": "B", "legendFormat": "Gas Limit ({{__value__}})"}
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "unit": "locale",
+          "decimals": 0,
+          "noValue": "N/A"
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Gas Used"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "white"}}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Gas Limit"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#0e1532"}}]
+          }
+        ]
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Gas Usage %",
+      "targets": [{"expr": "(monad_block_gas_used / monad_block_gas_limit) * 100", "refId": "A"}],
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 12},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "white", "value": 0},
+              {"color": "#131835", "value": 50},
+              {"color": "black", "value": 80}
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "displayName": "Gas Usage Percentage",
+          "decimals": 2,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true,
+        "text": {
+          "valueSize": 24
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Gas Price",
+      "targets": [{"expr": "monad_gas_price", "refId": "A"}],
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 12},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#101a33", "value": null}
+            ]
+          },
+          "unit": "locale",
+          "displayName": "Gas Price (Wei)",
+          "decimals": 0,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Base Fee",
+      "targets": [{"expr": "monad_block_base_fee", "refId": "A"}],
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 16},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#101936", "value": null}
+            ]
+          },
+          "unit": "locale",
+          "displayName": "Base Fee (Wei)",
+          "decimals": 0,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Block & Transaction Details",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 20},
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Block Transactions Over Time",
+      "targets": [{"expr": "monad_block_transaction_count", "refId": "A", "legendFormat": "Transaction Count"}],
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 21},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "fixed", "fixedColor": "#0e1532"},
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none"
+          },
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Block Timestamp",
+      "targets": [{"expr": "monad_block_timestamp", "refId": "A"}],
+      "gridPos": {"h": 3, "w": 6, "x": 12, "y": 21},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#131835", "value": null}
+            ]
+          },
+          "unit": "dateTimeAsIso",
+          "displayName": "Last Block Time",
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Transaction Count",
+      "targets": [{"expr": "monad_block_transaction_count", "refId": "A"}],
+      "gridPos": {"h": 3, "w": 6, "x": 18, "y": 21},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#101a33", "value": null}
+            ]
+          },
+          "unit": "locale",
+          "displayName": "Transaction Count",
+          "decimals": 0,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Fee History Base",
+      "targets": [{"expr": "monad_fee_history_base_fee", "refId": "A"}],
+      "gridPos": {"h": 3, "w": 6, "x": 12, "y": 24},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#101936", "value": null}
+            ]
+          },
+          "unit": "locale",
+          "displayName": "Fee History Base Fee (Wei)",
+          "decimals": 0,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Gas Used Ratio",
+      "targets": [{"expr": "monad_fee_history_gas_used_ratio", "refId": "A"}],
+      "gridPos": {"h": 3, "w": 6, "x": 18, "y": 24},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "white", "value": 0},
+              {"color": "#131835", "value": 0.5},
+              {"color": "black", "value": 0.8}
+            ]
+          },
+          "unit": "percentunit",
+          "displayName": "Gas Used Ratio",
+          "decimals": 4,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "System Performance",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 27},
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Usage",
+      "targets": [
+        {"expr": "process_resident_memory_bytes", "refId": "A", "legendFormat": "Resident Memory"},
+        {"expr": "process_virtual_memory_bytes", "refId": "B", "legendFormat": "Virtual Memory"}
+      ],
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 28},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none"
+          },
+          "unit": "bytes",
+          "decimals": 0,
+          "noValue": "N/A"
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Resident Memory"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "white"}}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Virtual Memory"},
+            "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#0e1532"}}]
+          }
+        ]
+      }
+    },
+    {
+      "type": "stat",
+      "title": "CPU Usage",
+      "targets": [{"expr": "rate(process_cpu_seconds_total[5m]) * 100", "refId": "A"}],
+      "gridPos": {"h": 3, "w": 6, "x": 12, "y": 28},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "white", "value": 0},
+              {"color": "#131835", "value": 50},
+              {"color": "black", "value": 80}
+            ]
+          },
+          "unit": "percent",
+          "displayName": "CPU Usage (5m avg)",
+          "decimals": 2,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Open Files",
+      "targets": [{"expr": "process_open_fds", "refId": "A"}],
+      "gridPos": {"h": 3, "w": 6, "x": 18, "y": 28},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#101a33", "value": null}
+            ]
+          },
+          "unit": "locale",
+          "displayName": "Open File Descriptors",
+          "decimals": 0,
+          "noValue": "N/A"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Python Info",
+      "targets": [{"expr": "python_info", "refId": "A"}],
+      "gridPos": {"h": 3, "w": 6, "x": 12, "y": 31},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "#101936", "value": null}
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "RPC Errors",
+      "targets": [{"expr": "monad_rpc_errors_total", "refId": "A"}],
+      "gridPos": {"h": 3, "w": 6, "x": 18, "y": 31},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "thresholds": {
+            "steps": [
+              {"color": "white", "value": 0},
+              {"color": "#131835", "value": 1},
+              {"color": "black", "value": 5}
+            ]
+          },
+          "unit": "locale",
+          "displayName": "Total RPC Errors",
+          "decimals": 0,
+          "noValue": "0"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        }
+      }
+    },
+    {
+      "type": "text",
+      "title": "",
+      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 35},
+      "options": {
+        "mode": "html",
+        "content": "<div style='text-align: center; padding: 25px; background: linear-gradient(135deg, #131835 0%, #101a33 100%); border-radius: 12px; border: 1px solid #0e1532; margin-top: 20px; position: relative;'><div style='position: absolute; top: 20px; left: 30px; width: 50px; height: 50px); background-size: contain; background-repeat: no-repeat;'></div><div style='color: white; font-weight: bold; margin-bottom: 15px; font-size: 1.2em;'>Powered by Noders LLC</div><div style='color: #999; font-size: 14px; margin-bottom: 10px;'><a href='mailto:office@noders.team' style='color: #999; text-decoration: none; margin: 0 15px;'>📧 office@noders.team</a> | <a href='https://noders.team/' style='color: #999; text-decoration: none; margin: 0 15px;'>🌐 noders.team</a> | <a href='https://x.com/NODERS_TEAM' style='color: #999; text-decoration: none; margin: 0 15px;'>🐦 @NODERS_TEAM</a></div><div style='color: #666; font-size: 12px; margin-top: 10px;'><a href='https://www.linkedin.com/company/101675040' style='color: #666; text-decoration: none; margin: 0 10px;'>LinkedIn</a> | <a href='https://t.me/nodersteam' style='color: #666; text-decoration: none; margin: 0 10px;'>Telegram</a> | <a href='https://github.com/noders-team' style='color: #666; text-decoration: none; margin: 0 10px;'>GitHub</a> | <a href='https://medium.com/@NODERS_TEAM' style='color: #666; text-decoration: none; margin: 0 10px;'>Medium</a> | <a href='https://noders.services/' style='color: #666; text-decoration: none; margin: 0 10px;'>Services</a></div></div>"
+      },
+      "transparent": true
+    }
+  ],
+  "templating": {"list": []},
+  "annotations": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+  },
+  "editable": true,
+  "gnetId": null,
+  "style": "dark"
+} 

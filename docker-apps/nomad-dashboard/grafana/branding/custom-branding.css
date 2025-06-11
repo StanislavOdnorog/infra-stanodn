@@ -1,0 +1,301 @@
+/* Custom Noders Branding CSS */
+
+/* Hide original Grafana logo and replace with Noders logo */
+.sidemenu-logo,
+.navbar-brand-logo,
+[data-testid="sidemenu-logo"],
+.navbar-brand img,
+.login-logo img,
+.css-1m12llp,
+img[src*="grafana_icon.svg"],
+img[alt="Grafana"] {
+    display: none !important;
+}
+
+/* Replace main Grafana icon with Noders logo */
+.css-1m12llp,
+img[src*="grafana_icon.svg"],
+img[alt="Grafana"] {
+    display: none !important;
+}
+
+.css-1m12llp::after,
+img[src*="grafana_icon.svg"]::after,
+img[alt="Grafana"]::after {
+    content: "";
+    background-image: url('/public/img/noders_icon.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block !important;
+    width: 32px;
+    height: 32px;
+}
+
+/* Replace the navbar logo area */
+.navbar-brand::after {
+    content: "";
+    background-image: url('/public/img/noders_icon.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block !important;
+    width: 32px;
+    height: 32px;
+    position: absolute;
+    top: 50%;
+    left: 16px;
+    transform: translateY(-50%);
+}
+
+/* Replace main sidebar logo */
+.sidemenu-logo::after,
+[data-testid="sidemenu-logo"]::after {
+    content: "";
+    background-image: url('/public/img/noders_icon.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block !important;
+    width: 60px;
+    height: 40px;
+    margin: 10px auto;
+}
+
+/* Replace navbar logo */
+.navbar-brand-logo::after {
+    content: "";
+    background-image: url('/public/img/noders_icon.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block !important;
+    width: 32px;
+    height: 32px;
+}
+
+/* Hide breadcrumbs navigation */
+.breadcrumbs,
+.css-1tjh2d8,
+.css-1u7edqg,
+.page-toolbar,
+[data-testid="breadcrumbs"],
+.navbar-page-btn,
+.page-header__breadcrumbs,
+.css-12njkxc,
+.css-70qvj9 {
+    display: none !important;
+}
+
+/* Hide search functionality */
+.search-wrapper,
+.search-field-wrapper,
+.search-field,
+.css-1f7j2o9,
+[data-testid="search-wrapper"],
+[placeholder*="Search"],
+[aria-label*="Search"],
+.search-container,
+.css-search,
+input[placeholder*="Search"] {
+    display: none !important;
+}
+
+/* Hide sign in button */
+.sign-in-btn,
+.css-sign-in,
+[data-testid="sign-in"],
+button[aria-label*="Sign in"],
+a[href*="login"],
+.login-button,
+.css-1kb66uo-button[aria-label*="Sign in"] {
+    display: none !important;
+}
+
+/* Hide dashboard controls (time picker, refresh, zoom) */
+[data-testid="data-testid dashboard controls"],
+.css-12rf1df,
+.css-9gcq8r,
+.css-khbk51,
+[data-testid="data-testid TimePicker Open Button"],
+.refresh-picker,
+[data-testid="data-testid RefreshPicker run button"],
+[data-testid="data-testid RefreshPicker interval button"] {
+    display: none !important;
+}
+
+/* Hide nav toolbar (export, share buttons) */
+[data-testid="data-testid Nav toolbar"],
+.css-qn8k9s,
+[data-testid="data-testid new export button"],
+[data-testid="data-testid new share button"],
+[data-testid="data-testid new share link-button"],
+[data-testid="data-testid new share button arrow menu"] {
+    display: none !important;
+}
+
+/* Hide all toolbar buttons */
+.css-wjb99e-toolbar-button,
+.css-1mas3zf-toolbar-button,
+.css-1xqw7wn-button,
+.css-1kb66uo-button {
+    display: none !important;
+}
+
+/* Hide top navigation completely */
+.navbar-nav,
+.navbar-collapse,
+.css-1h1kp0w,
+.css-1l3unnd {
+    display: none !important;
+}
+
+/* Clean up navbar area */
+.navbar {
+    padding: 5px 15px !important;
+    min-height: 50px !important;
+}
+
+.navbar-brand {
+    position: relative;
+    margin-right: 0 !important;
+}
+
+/* Custom footer branding */
+.footer::after {
+    content: "Powered by Noders Team | office@noders.team";
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    color: #999;
+    font-size: 12px;
+    padding: 10px 0;
+    border-top: 1px solid #333;
+}
+
+/* Hide Grafana version in footer */
+.footer .text-center:first-child {
+    display: none !important;
+}
+
+/* Custom login page styling */
+.login-page .login-box {
+    background: linear-gradient(135deg, #131835 0%, #101a33 50%, #101936 100%);
+    border: 1px solid #0e1532;
+    border-radius: 8px;
+}
+
+.login-page::before {
+    content: "";
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-image: url('/public/img/noders_icon.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 200px;
+    height: 60px;
+    z-index: 1000;
+}
+
+/* Custom page title */
+.page-header__title::after {
+    content: " | Noders Team";
+    font-size: 0.8em;
+    color: #999;
+}
+
+/* Hide Grafana help menu items and replace with custom links */
+.dropdown-menu .dropdown-item[href*="grafana.com"] {
+    display: none !important;
+}
+
+/* Add custom menu items */
+.navbar .navbar-nav::after {
+    content: "";
+    position: relative;
+}
+
+/* Social links in sidebar */
+.sidemenu::after {
+    content: "";
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+    z-index: 1000;
+}
+
+/* Custom theme colors matching our palette */
+:root {
+    --primary-color: #131835;
+    --secondary-color: #101a33; 
+    --accent-color: #101936;
+    --dark-color: #0e1532;
+}
+
+/* Apply custom colors to various elements */
+.panel-container,
+.dashboard-container {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--accent-color) 100%);
+}
+
+.graph-panel-container {
+    border: 1px solid var(--dark-color);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--primary-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--dark-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Hide dashboard edit controls */
+.dashboard-settings,
+.dashboard-submenu,
+.panel-editor-tabs,
+.panel-options-group,
+[aria-label="Dashboard settings"],
+[aria-label="Add panel"],
+[aria-label="Dashboard insights"] {
+    display: none !important;
+}
+
+/* Hide page header elements */
+.page-header,
+.page-header__inner,
+.page-header__content,
+.page-header__nav-content {
+    display: none !important;
+}
+
+/* Hide main navigation items */
+.main-nav,
+.sidemenu__top,
+.sidemenu__bottom,
+.sidemenu-item {
+    display: none !important;
+}
+
+/* Keep only the dashboard content visible */
+.main-view {
+    margin-top: 0 !important;
+    padding-top: 10px !important;
+} 
