@@ -39,7 +39,7 @@ services:
       - ./grafana/img/noders_icon.svg:/usr/share/grafana/public/img/grafana_icon.svg
       - grafana-storage:/var/lib/grafana
     ports:
-      - "3000:3000"
+      - "80:3000"
     restart: unless-stopped
     networks:
       - monad-network
