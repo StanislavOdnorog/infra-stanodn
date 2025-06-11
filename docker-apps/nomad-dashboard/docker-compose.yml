@@ -29,9 +29,6 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
       - GF_AUTH_DISABLE_LOGIN_FORM=true
       - GF_USERS_DEFAULT_THEME=dark
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_AUTH_PROXY_ENABLED=false
-      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
       - GF_INSTALL_PLUGINS=marcusolsson-dynamictext-panel,marcusolsson-static-datasource
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
@@ -40,7 +37,7 @@ services:
       - ./grafana/img/noders_icon.svg:/usr/share/grafana/public/img/grafana_icon.svg
       - grafana-storage:/var/lib/grafana
     ports:
-      - "80:3000"
+      - "3000:3000"
     restart: unless-stopped
     networks:
       - monad-network
