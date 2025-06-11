@@ -27,3 +27,5 @@ variables.auto.tfvars
 
 # Pi-hole
 pihole/config/custom.list
+
+.DS_Store
