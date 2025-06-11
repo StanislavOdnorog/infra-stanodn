@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  monad-exporter:
+    build: .
+    container_name: monad-prometheus-exporter
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=UTC
+    networks:
+      - monitoring
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monad-exporter.rule=Host(`monad-exporter.local`)"
+      - "traefik.http.routers.monad-exporter.entrypoints=web"
+      - "traefik.http.services.monad-exporter.loadbalancer.server.port=8080"
+      # Prometheus scraping labels
+      - "prometheus.io/scrape=true"
+      - "prometheus.io/port=8080"
+      - "prometheus.io/path=/metrics"
+      - "prometheus.io/job=monad-exporter"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  monitoring:
+    external: true 
