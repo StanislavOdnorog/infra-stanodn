@@ -5,6 +5,7 @@
     grep -e "^\"{{ vm_template_id }}\""
   register: template_check
   failed_when: false
+  changed_when: false
   become: yes
 
 - name: Create template if is_present is true

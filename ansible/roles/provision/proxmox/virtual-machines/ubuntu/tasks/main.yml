@@ -12,6 +12,11 @@
     set_fact:
       vm_id: "{{ list_result.stdout }}"
     when: vm_id is not defined
+
+  - name: debug vm_id
+    debug:
+      msg: "VM ID: {{ vm_id }}"
+    when: vm_id is defined
   
   - name: wait for user to stop task if it's an error
     command: sleep 10
