@@ -3,7 +3,9 @@
 - name: Delete VM if vm_is_present == false
   block:
   - name: Find VM ID
-    command: qm list | awk '{if ($2 == "{{ vm_name }}") print $1}'
+    shell: |
+      qm list | \
+      awk '{if ($2 == "{{ vm_name }}") print $1}'
     register: list_result
     failed_when: false
     changed_when: false
