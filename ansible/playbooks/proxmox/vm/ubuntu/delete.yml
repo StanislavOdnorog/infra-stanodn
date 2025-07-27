@@ -10,9 +10,9 @@
       set_fact:
         vm_is_present: false
 
-    - name: Set vm_id to target
+    - name: Set vm_name to target
       set_fact:
-        vm_id: "{{ target }}"
+        vm_name: "{{ target }}"
 
     - name: Create VM with interactive configuration
       include_role:

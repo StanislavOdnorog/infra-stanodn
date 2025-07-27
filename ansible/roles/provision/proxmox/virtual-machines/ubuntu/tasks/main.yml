@@ -19,9 +19,9 @@
     when: vm_id is defined
   
   - name: wait for user to stop task if it's an error
-    command: sleep 10
-    failed_when: false
-    changed_when: false
+    pause:
+      seconds: 10
+    when: vm_id is defined
 
   - name: Delete VM if vm_is_present == false
     command: qm destroy {{ vm_id }}
