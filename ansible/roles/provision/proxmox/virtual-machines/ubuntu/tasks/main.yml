@@ -13,22 +13,10 @@
   - name: Set vm_id for VM
     set_fact:
       vm_id: "{{ list_result.stdout }}"
-    when: vm_id is not defined
-
-  - name: debug vm_id
-    debug:
-      msg: |
-        - "VM Name: {{ vm_name }}"
-        - "VM ID: {{ vm_id }}"
-        - "VM is_present: {{ vm_is_present }}"
-        - "list_result: {{ list_result }}"
-        - "list_result.stdout: {{ list_result.stdout }}"
-
-    when: vm_id is defined
   
   - name: wait for user to stop task if it's an error
     pause:
-      seconds: 10
+      seconds: 20
     when: vm_id is defined
 
   - name: Delete VM if vm_is_present == false
