@@ -1,0 +1,55 @@
+---
+# Default variables for WireGuard + Shadowsocks VPN setup
+
+# Server definitions
+wireguard_server_ip: "{{ hostvars[groups['wireguard_servers'][0]]['ansible_default_ipv4']['address'] }}"
+shadowsocks_server_ip: "{{ hostvars[groups['shadowsocks_servers'][0]]['ansible_default_ipv4']['address'] }}"
+
+# Shadowsocks configuration
+shadowsocks_config:
+  server: ["0.0.0.0"]
+  mode: "tcp_and_udp"
+  server_port: 443
+  password: "FIQX0aS65jYIf51Rg496GiBfHbk"
+  timeout: 86400
+  method: "chacha20-ietf-poly1305"
+  plugin: "obfs-server"
+  plugin_opts: "obfs=tls;obfs-host=cloudflare.com"
+
+# WireGuard configuration
+wireguard_config:
+  interface: "wg0"
+  port: 51820
+  private_key_path: "/etc/wireguard/private_key"
+  public_key_path: "/etc/wireguard/public_key"
+  server_ip: "10.0.0.1/24"
+  client_ip_range: "10.0.0.0/24"
+  dns: "8.8.8.8"
+
+# WireGuard UI configuration
+wg_ui_config:
+  port: 5000
+  admin_username: "admin"
+  admin_password: "changeme123"
+  session_secret: "changeme_session_secret"
+
+# Routing and forwarding
+enable_ip_forwarding: true
+socks_proxy_port: 1080
+
+# Package versions (optional, leave empty for latest)
+shadowsocks_libev_version: ""
+wireguard_version: ""
+
+# Service configuration
+services_to_enable:
+  - shadowsocks-libev
+  - wg-quick@wg0
+  - wireguard-ui
+
+# Security settings
+firewall_rules:
+  shadowsocks_port: "{{ shadowsocks_config.server_port }}"
+  wireguard_port: "{{ wireguard_config.port }}"
+  wireguard_ui_port: "{{ wg_ui_config.port }}"
+  socks_port: "{{ socks_proxy_port }}"

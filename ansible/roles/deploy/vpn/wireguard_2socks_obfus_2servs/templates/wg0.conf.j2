@@ -1,0 +1,22 @@
+[Interface]
+# WireGuard Server Configuration
+PrivateKey = {{ wg_private_key.content | b64decode | trim }}
+Address = {{ wireguard_config.server_ip }}
+ListenPort = {{ wireguard_config.port }}
+SaveConfig = true
+
+# Enable IP forwarding and NAT
+PostUp = iptables -A FORWARD -i {{ wireguard_config.interface }} -j ACCEPT; iptables -A FORWARD -o {{ wireguard_config.interface }} -j ACCEPT; iptables -t nat -A POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+PostDown = iptables -D FORWARD -i {{ wireguard_config.interface }} -j ACCEPT; iptables -D FORWARD -o {{ wireguard_config.interface }} -j ACCEPT; iptables -t nat -D POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+
+# Route traffic through SOCKS proxy (redsocks)
+PostUp = iptables -t nat -A OUTPUT -p tcp --dport 80,443 -j REDIRECT --to-ports {{ socks_proxy_port }}
+PostDown = iptables -t nat -D OUTPUT -p tcp --dport 80,443 -j REDIRECT --to-ports {{ socks_proxy_port }}
+
+# DNS
+DNS = {{ wireguard_config.dns }}
+
+# Example peer configuration (clients will be added via UI)
+# [Peer]
+# PublicKey = CLIENT_PUBLIC_KEY
+# AllowedIPs = 10.0.0.2/32 

@@ -1,0 +1,258 @@
+---
+# Main tasks for WireGuard + Shadowsocks VPN deployment
+
+- name: Update package cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  become: yes
+
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+  become: yes
+  when: enable_ip_forwarding
+
+# Shadowsocks Server Tasks
+- name: Install Shadowsocks-libev and dependencies
+  apt:
+    name:
+      - shadowsocks-libev
+      - simple-obfs
+      - ufw
+    state: present
+  become: yes
+  when: inventory_hostname in groups['shadowsocks_servers']
+
+- name: Create shadowsocks config directory
+  file:
+    path: /etc/shadowsocks-libev
+    state: directory
+    mode: '0755'
+  become: yes
+  when: inventory_hostname in groups['shadowsocks_servers']
+
+- name: Configure Shadowsocks server
+  copy:
+    content: "{{ shadowsocks_config | to_nice_json }}"
+    dest: /etc/shadowsocks-libev/config.json
+    mode: '0600'
+    backup: yes
+  become: yes
+  notify: restart shadowsocks-libev
+  when: inventory_hostname in groups['shadowsocks_servers']
+
+- name: Configure UFW for Shadowsocks
+  ufw:
+    rule: allow
+    port: "{{ shadowsocks_config.server_port }}"
+    proto: "{{ item }}"
+  become: yes
+  loop:
+    - tcp
+    - udp
+  when: inventory_hostname in groups['shadowsocks_servers']
+
+- name: Start and enable Shadowsocks service
+  systemd:
+    name: shadowsocks-libev
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  become: yes
+  when: inventory_hostname in groups['shadowsocks_servers']
+
+# WireGuard Server Tasks
+- name: Install WireGuard and dependencies
+  apt:
+    name:
+      - wireguard
+      - wireguard-tools
+      - qrencode
+      - iptables-persistent
+      - curl
+      - wget
+      - ufw
+    state: present
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Create WireGuard directory
+  file:
+    path: /etc/wireguard
+    state: directory
+    mode: '0700'
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Generate WireGuard private key
+  shell: wg genkey > {{ wireguard_config.private_key_path }}
+  args:
+    creates: "{{ wireguard_config.private_key_path }}"
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Set private key permissions
+  file:
+    path: "{{ wireguard_config.private_key_path }}"
+    mode: '0600'
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Generate WireGuard public key
+  shell: wg pubkey < {{ wireguard_config.private_key_path }} > {{ wireguard_config.public_key_path }}
+  args:
+    creates: "{{ wireguard_config.public_key_path }}"
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Read WireGuard private key
+  slurp:
+    src: "{{ wireguard_config.private_key_path }}"
+  register: wg_private_key
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Create WireGuard server configuration
+  template:
+    src: wg0.conf.j2
+    dest: "/etc/wireguard/{{ wireguard_config.interface }}.conf"
+    mode: '0600'
+    backup: yes
+  become: yes
+  notify: restart wireguard
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Configure UFW for WireGuard
+  ufw:
+    rule: allow
+    port: "{{ wireguard_config.port }}"
+    proto: udp
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Configure UFW for WireGuard UI
+  ufw:
+    rule: allow
+    port: "{{ wg_ui_config.port }}"
+    proto: tcp
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+  become: yes
+
+- name: Allow SSH through UFW
+  ufw:
+    rule: allow
+    name: OpenSSH
+  become: yes
+
+# Install WireGuard UI
+- name: Create wireguard-ui user
+  user:
+    name: wireguard-ui
+    system: yes
+    shell: /bin/false
+    home: /var/lib/wireguard-ui
+    create_home: yes
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Download WireGuard UI
+  get_url:
+    url: "https://github.com/ngoduykhanh/wireguard-ui/releases/latest/download/wireguard-ui-linux-amd64.tar.gz"
+    dest: "/tmp/wireguard-ui.tar.gz"
+    mode: '0644'
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Extract WireGuard UI
+  unarchive:
+    src: "/tmp/wireguard-ui.tar.gz"
+    dest: "/usr/local/bin/"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Create WireGuard UI configuration
+  template:
+    src: wireguard-ui.env.j2
+    dest: /etc/wireguard-ui.env
+    mode: '0600'
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Create WireGuard UI systemd service
+  template:
+    src: wireguard-ui.service.j2
+    dest: /etc/systemd/system/wireguard-ui.service
+    mode: '0644'
+  become: yes
+  notify: restart wireguard-ui
+  when: inventory_hostname in groups['wireguard_servers']
+
+# SOCKS to TUN setup (on WireGuard server)
+- name: Install redsocks for SOCKS to TUN
+  apt:
+    name: redsocks
+    state: present
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Configure redsocks for Shadowsocks proxy
+  template:
+    src: redsocks.conf.j2
+    dest: /etc/redsocks.conf
+    mode: '0644'
+    backup: yes
+  become: yes
+  notify: restart redsocks
+  when: inventory_hostname in groups['wireguard_servers']
+
+# Start services
+- name: Start and enable WireGuard
+  systemd:
+    name: "wg-quick@{{ wireguard_config.interface }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Start and enable WireGuard UI
+  systemd:
+    name: wireguard-ui
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Start and enable redsocks
+  systemd:
+    name: redsocks
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Display connection information
+  debug:
+    msg: |
+      Shadowsocks Server: {{ shadowsocks_server_ip }}:{{ shadowsocks_config.server_port }}
+      WireGuard Server: {{ wireguard_server_ip }}:{{ wireguard_config.port }}
+      WireGuard UI: http://{{ wireguard_server_ip }}:{{ wg_ui_config.port }}
+      Default credentials: {{ wg_ui_config.admin_username }}/{{ wg_ui_config.admin_password }}
+  run_once: true

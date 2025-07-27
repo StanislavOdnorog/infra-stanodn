@@ -1,0 +1,17 @@
+base {
+    log_debug = off;
+    log_info = on;
+    log = "file:/var/log/redsocks.log";
+    daemon = on;
+    redirector = iptables;
+}
+
+redsocks {
+    local_ip = 127.0.0.1;
+    local_port = {{ socks_proxy_port }};
+    ip = {{ shadowsocks_server_ip }};
+    port = {{ shadowsocks_config.server_port }};
+    type = shadowsocks;
+    login = "{{ shadowsocks_config.method }}";
+    password = "{{ shadowsocks_config.password }}";
+} 

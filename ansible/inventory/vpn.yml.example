@@ -1,0 +1,19 @@
+---
+# Example inventory for WireGuard + Shadowsocks VPN deployment
+# Copy this file to vpn.yml and update with your server details
+
+all:
+  children:
+    wireguard_servers:
+      hosts:
+        wg-server:
+          ansible_host: 192.168.1.100  # Replace with your WireGuard server IP
+          ansible_user: ubuntu         # Replace with your SSH user
+          ansible_ssh_private_key_file: ~/.ssh/id_rsa
+    
+    shadowsocks_servers:
+      hosts:
+        ss-server:
+          ansible_host: 192.168.1.101  # Replace with your Shadowsocks server IP
+          ansible_user: ubuntu         # Replace with your SSH user
+          ansible_ssh_private_key_file: ~/.ssh/id_rsa

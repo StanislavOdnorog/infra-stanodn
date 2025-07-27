@@ -1,0 +1,85 @@
+---
+# Playbook to deploy WireGuard + Shadowsocks VPN infrastructure
+# Usage: ansible-playbook -i inventory/vpn.yml playbooks/general/vpn-deploy.yml
+
+- name: Deploy WireGuard + Shadowsocks VPN Infrastructure
+  hosts: wireguard_servers:shadowsocks_servers
+  become: yes
+  gather_facts: yes
+
+  pre_tasks:
+    - name: Validate inventory groups
+      assert:
+        that:
+          - groups['wireguard_servers'] is defined
+          - groups['shadowsocks_servers'] is defined
+          - groups['wireguard_servers'] | length >= 1
+          - groups['shadowsocks_servers'] | length >= 1
+        fail_msg: "Both 'wireguard_servers' and 'shadowsocks_servers' groups must be defined in inventory with at least one host each"
+    
+    - name: Display deployment plan
+      debug:
+        msg: |
+          Deployment Plan:
+          ================
+          WireGuard Servers: {{ groups['wireguard_servers'] | join(', ') }}
+          Shadowsocks Servers: {{ groups['shadowsocks_servers'] | join(', ') }}
+          
+          Services to be installed:
+          - WireGuard with UI on: {{ groups['wireguard_servers'][0] }}
+          - Shadowsocks with obfuscation on: {{ groups['shadowsocks_servers'][0] }}
+      run_once: true
+
+  roles:
+    - role: deploy/vpn/wireguard_2socks_obfus_2servs
+
+  post_tasks:
+    - name: Wait for services to be ready
+      wait_for:
+        port: "{{ item.port }}"
+        host: "{{ item.host }}"
+        timeout: 60
+      loop:
+        - { port: "{{ shadowsocks_config.server_port }}", host: "{{ shadowsocks_server_ip }}" }
+        - { port: "{{ wireguard_config.port }}", host: "{{ wireguard_server_ip }}" }
+        - { port: "{{ wg_ui_config.port }}", host: "{{ wireguard_server_ip }}" }
+      when: inventory_hostname == item.host
+      
+    - name: Display final information
+      debug:
+        msg: |
+          ===============================================
+          VPN Infrastructure Deployment Complete!
+          ===============================================
+          
+          🔒 Shadowsocks Server:
+          Server: {{ shadowsocks_server_ip }}:{{ shadowsocks_config.server_port }}
+          Method: {{ shadowsocks_config.method }}
+          Plugin: {{ shadowsocks_config.plugin }}
+          Plugin Options: {{ shadowsocks_config.plugin_opts }}
+          
+          🌐 WireGuard Server:
+          Server: {{ wireguard_server_ip }}:{{ wireguard_config.port }}
+          Network: {{ wireguard_config.client_ip_range }}
+          
+          🖥️  WireGuard UI:
+          URL: http://{{ wireguard_server_ip }}:{{ wg_ui_config.port }}
+          Username: {{ wg_ui_config.admin_username }}
+          Password: {{ wg_ui_config.admin_password }}
+          
+          ⚙️  Configuration:
+          - Traffic from WireGuard clients is routed through Shadowsocks proxy
+          - Shadowsocks server provides obfuscated tunnel
+          - WireGuard provides secure client access
+          
+          📋 Next Steps:
+          1. Access WireGuard UI to add clients
+          2. Download client configurations
+          3. Configure clients to connect to WireGuard server
+          4. All client traffic will be automatically routed through Shadowsocks
+          
+          🔧 Configuration Files:
+          - WireGuard: /etc/wireguard/{{ wireguard_config.interface }}.conf
+          - Shadowsocks: /etc/shadowsocks-libev/config.json
+          - Redsocks: /etc/redsocks.conf
+      run_once: true

@@ -1,5 +1,6 @@
 ---
 # VM Basic Configuration
+vm_is_present: true
 vm_template_id: "{{ vm_prefix_id + 10 }}"
 vm_template: "ubuntu-noble-template"
 vm_name: "vm-{{ vm_id}}"

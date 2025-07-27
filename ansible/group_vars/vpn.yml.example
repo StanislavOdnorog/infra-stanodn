@@ -1,0 +1,9 @@
+shadowsocks_config:
+  password: "YOUR_SECURE_PASSWORD_HERE"
+  server_port: 8443
+  method: "aes-256-gcm"
+    
+wg_ui_config:
+  admin_username: "vpnadmin"
+  admin_password: "SecureP@ssw0rd"
+  port: 5000 
