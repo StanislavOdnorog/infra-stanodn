@@ -3,8 +3,8 @@
   hosts: cluster-proxmox
   become: yes
   vars_files:
-    - ../../../group_vars/all.yml
-    - ../../../group_vars/cloud-init.yml
+    - ../../../../group_vars/all.yml
+    - ../../../../group_vars/cloud-init.yml
   tasks:
     - name: Set vm_is_present to false
       set_fact:
