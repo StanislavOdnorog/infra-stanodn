@@ -15,7 +15,13 @@
 
   - name: debug vm_id
     debug:
-      msg: "VM ID: {{ vm_id }}"
+      msg: |
+        - "VM Name: {{ vm_name }}"
+        - "VM ID: {{ vm_id }}"
+        - "VM is_present: {{ vm_is_present }}"
+        - "list_result: {{ list_result }}"
+        - "list_result.stdout: {{ list_result.stdout }}"
+
     when: vm_id is defined
   
   - name: wait for user to stop task if it's an error
