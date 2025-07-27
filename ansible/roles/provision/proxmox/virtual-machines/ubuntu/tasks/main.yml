@@ -21,9 +21,7 @@
         - "VM Name: {{ vm_name }}"
         - "VM ID: {{ vm_id }}"
         - "VM is_present: {{ vm_is_present }}"
-        - "list_result: {{ list_result }}"
-        - "list_result.stdout: {{ list_result.stdout }}"
-  
+
   - name: wait for user to stop task if it's an error
     pause:
       seconds: 20
@@ -32,8 +30,6 @@
   - name: Delete VM if vm_is_present == false
     command: qm destroy {{ vm_id }}
     when: vm_id is defined
-    failed_when: false
-    changed_when: false
 
   when: vm_is_present == false
 
