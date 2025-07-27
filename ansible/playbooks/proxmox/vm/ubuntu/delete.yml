@@ -1,6 +1,6 @@
 ---
 - name: Delete Virtual Machine in Proxmox
-  hosts: "{{ target }}"
+  hosts: cluster-proxmox
   become: yes
   vars_files:
     - ../../../group_vars/all.yml
@@ -17,7 +17,6 @@
     - name: Create VM with interactive configuration
       include_role:
         name: provision/proxmox/virtual-machines/ubuntu
-      delegate_to: cluster-proxmox
       tags:
         - proxmox
         - ubuntu
