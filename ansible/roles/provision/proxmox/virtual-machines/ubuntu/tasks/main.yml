@@ -27,9 +27,15 @@
       seconds: 20
     when: vm_id is defined
 
+  - name: Stop VM if vm_is_present == false
+    command: qm stop {{ vm_id }}
+    when: vm_id is defined
+    ignore_errors: true
+
   - name: Delete VM if vm_is_present == false
     command: qm destroy {{ vm_id }}
     when: vm_id is defined
+    ignore_errors: true
 
   when: vm_is_present == false
 
