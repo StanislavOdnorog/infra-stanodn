@@ -85,9 +85,9 @@
     when: vm_exists_check.rc == 0
 
   - name: wait for user to stop task if it's an error
-    command: sleep 10
-    failed_when: false
-    changed_when: false
+    pause:
+      seconds: 20
+    when: vm_id is defined
 
   - name: Clone VM from template
     command: >

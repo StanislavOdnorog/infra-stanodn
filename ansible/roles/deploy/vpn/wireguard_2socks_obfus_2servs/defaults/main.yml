@@ -28,6 +28,7 @@ wireguard_config:
 
 # WireGuard UI configuration
 wg_ui_config:
+  enabled: true  # Set to false to skip WireGuard UI installation
   port: 5000
   admin_username: "admin"
   admin_password: "changeme123"
@@ -37,15 +38,23 @@ wg_ui_config:
 enable_ip_forwarding: true
 socks_proxy_port: 1080
 
+# Tun2socks configuration
+tun2socks_config:
+  interface: "tun1"
+  ip: "198.18.0.1/30"
+  mtu: 1500
+  log_level: "info"
+
 # Package versions (optional, leave empty for latest)
 shadowsocks_libev_version: ""
-wireguard_version: ""
+wireguard_ui_url: "https://github.com/ngoduykhanh/wireguard-ui/releases/download/v0.6.2/wireguard-ui-v0.6.2-linux-amd64.tar.gz"
 
 # Service configuration
 services_to_enable:
   - shadowsocks-libev
   - wg-quick@wg0
   - wireguard-ui
+  - tun2socks
 
 # Security settings
 firewall_rules:

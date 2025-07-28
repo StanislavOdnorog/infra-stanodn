@@ -6,8 +6,9 @@ AssertFileIsExecutable=/usr/local/bin/wireguard-ui
 
 [Service]
 Type=simple
-User=wireguard-ui
-Group=wireguard-ui
+User=root
+Group=root
+WorkingDirectory=/var/lib/wireguard-ui
 ExecStart=/usr/local/bin/wireguard-ui
 EnvironmentFile=/etc/wireguard-ui.env
 Restart=always

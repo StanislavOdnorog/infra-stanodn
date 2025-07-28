@@ -1,9 +1,10 @@
 ---
 # Playbook to deploy WireGuard + Shadowsocks VPN infrastructure
-# Usage: ansible-playbook -i inventory/vpn.yml playbooks/general/vpn-deploy.yml
+# Usage: cd ansible && ansible-playbook -i inventory/vpn.yml playbooks/general/vpn_deploy.yml
 
 - name: Deploy WireGuard + Shadowsocks VPN Infrastructure
   hosts: wireguard_servers:shadowsocks_servers
+  vars: ../../group_vars/vpn.yml
   become: yes
   gather_facts: yes
 
@@ -31,7 +32,7 @@
       run_once: true
 
   roles:
-    - role: deploy/vpn/wireguard_2socks_obfus_2servs
+    - role: ../../roles/deploy/vpn/wireguard_2socks_obfus_2servs
 
   post_tasks:
     - name: Wait for services to be ready

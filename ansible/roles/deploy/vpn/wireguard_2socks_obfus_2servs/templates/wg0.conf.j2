@@ -3,15 +3,16 @@
 PrivateKey = {{ wg_private_key.content | b64decode | trim }}
 Address = {{ wireguard_config.server_ip }}
 ListenPort = {{ wireguard_config.port }}
-SaveConfig = true
+SaveConfig = false
 
 # Enable IP forwarding and NAT
-PostUp = iptables -A FORWARD -i {{ wireguard_config.interface }} -j ACCEPT; iptables -A FORWARD -o {{ wireguard_config.interface }} -j ACCEPT; iptables -t nat -A POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
-PostDown = iptables -D FORWARD -i {{ wireguard_config.interface }} -j ACCEPT; iptables -D FORWARD -o {{ wireguard_config.interface }} -j ACCEPT; iptables -t nat -D POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE
+PostUp = iptables -A FORWARD -i {{ wireguard_config.interface }} -j ACCEPT; iptables -A FORWARD -o {{ wireguard_config.interface }} -j ACCEPT; iptables -t nat -A POSTROUTING -o tun0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i {{ wireguard_config.interface }} -j ACCEPT; iptables -D FORWARD -o {{ wireguard_config.interface }} -j ACCEPT; iptables -t nat -D POSTROUTING -o tun0 -j MASQUERADE
 
-# Route traffic through SOCKS proxy (redsocks)
-PostUp = iptables -t nat -A OUTPUT -p tcp --dport 80,443 -j REDIRECT --to-ports {{ socks_proxy_port }}
-PostDown = iptables -t nat -D OUTPUT -p tcp --dport 80,443 -j REDIRECT --to-ports {{ socks_proxy_port }}
+# Route traffic through tun2socks (via {{ tun2socks_config.interface }} interface)
+# Note: This routing is handled by tun2socks service, not WireGuard directly
+# PostUp = ip route add 0.0.0.0/1 dev {{ tun2socks_config.interface }} table 100; ip route add 128.0.0.0/1 dev {{ tun2socks_config.interface }} table 100; ip rule add from {{ wireguard_config.client_ip_range }} table 100
+# PostDown = ip rule del from {{ wireguard_config.client_ip_range }} table 100; ip route del 0.0.0.0/1 dev {{ tun2socks_config.interface }} table 100; ip route del 128.0.0.0/1 dev {{ tun2socks_config.interface }} table 100
 
 # DNS
 DNS = {{ wireguard_config.dns }}

@@ -1,0 +1,23 @@
+[Unit]
+Description=Tun2Socks with Shadowsocks Support
+After=network.target
+Before=wg-quick@{{ wireguard_config.interface }}.service
+
+[Service]
+Type=simple
+User=root
+EnvironmentFile=/etc/default/tun2socks
+ExecStartPre=-/bin/bash -c 'ip link del dev tun0 2>/dev/null || true'
+ExecStartPre=ip tuntap add mode tun dev tun0
+ExecStartPre=ip addr add 192.168.0.33/24 dev tun0
+ExecStartPre=ip link set dev tun0 up
+ExecStart=tun2socks -device tun://tun0 -proxy ss://{{ shadowsocks_config.method }}:${SSPASSWORD}@${SSIP}:${SSPORT}
+ExecStartPost=/bin/bash -c 'sleep 2 && ip r add default dev tun0 metric 200'
+ExecStartPost=/bin/bash -c 'echo "nameserver 1.1.1.1" > /etc/resolv.conf'
+ExecStartPost=/bin/bash -c 'echo "nameserver 8.8.8.8" >> /etc/resolv.conf'
+ExecStopPost=-/bin/bash -c 'ip link set dev tun0 down 2>/dev/null || true'
+ExecStopPost=-/bin/bash -c 'ip link del dev tun0 2>/dev/null || true'
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target 

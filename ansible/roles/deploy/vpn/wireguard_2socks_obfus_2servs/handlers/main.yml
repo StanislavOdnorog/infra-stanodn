@@ -22,9 +22,9 @@
     daemon_reload: yes
   become: yes
 
-- name: restart redsocks
+- name: restart tun2socks
   systemd:
-    name: redsocks
+    name: tun2socks
     state: restarted
     daemon_reload: yes
   become: yes 

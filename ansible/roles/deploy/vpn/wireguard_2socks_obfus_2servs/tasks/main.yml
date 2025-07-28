@@ -1,11 +1,13 @@
 ---
-# Main tasks for WireGuard + Shadowsocks VPN deployment
+# Two-Stage WireGuard + Shadowsocks VPN Deployment
+# Based on: https://habr.com/ru/articles/759554/
 
 - name: Update package cache
   apt:
     update_cache: yes
     cache_valid_time: 3600
   become: yes
+  ignore_errors: true
 
 - name: Enable IP forwarding
   sysctl:
@@ -17,12 +19,11 @@
   become: yes
   when: enable_ip_forwarding
 
-# Shadowsocks Server Tasks
-- name: Install Shadowsocks-libev and dependencies
+# Shadowsocks Server (EU/Abroad) Tasks
+- name: Install Shadowsocks-libev on EU server
   apt:
     name:
       - shadowsocks-libev
-      - simple-obfs
       - ufw
     state: present
   become: yes
@@ -36,9 +37,17 @@
   become: yes
   when: inventory_hostname in groups['shadowsocks_servers']
 
-- name: Configure Shadowsocks server
+- name: Configure Shadowsocks server (EU)
   copy:
-    content: "{{ shadowsocks_config | to_nice_json }}"
+    content: |
+      {
+          "server": ["0.0.0.0"],
+          "mode": "tcp_and_udp",
+          "server_port": {{ shadowsocks_config.server_port }},
+          "password": "{{ shadowsocks_config.password }}",
+          "timeout": 86400,
+          "method": "{{ shadowsocks_config.method }}"
+      }
     dest: /etc/shadowsocks-libev/config.json
     mode: '0600'
     backup: yes
@@ -46,7 +55,7 @@
   notify: restart shadowsocks-libev
   when: inventory_hostname in groups['shadowsocks_servers']
 
-- name: Configure UFW for Shadowsocks
+- name: Configure UFW for Shadowsocks (EU)
   ufw:
     rule: allow
     port: "{{ shadowsocks_config.server_port }}"
@@ -56,8 +65,9 @@
     - tcp
     - udp
   when: inventory_hostname in groups['shadowsocks_servers']
+  ignore_errors: true
 
-- name: Start and enable Shadowsocks service
+- name: Start and enable Shadowsocks service (EU)
   systemd:
     name: shadowsocks-libev
     state: started
@@ -66,17 +76,17 @@
   become: yes
   when: inventory_hostname in groups['shadowsocks_servers']
 
-# WireGuard Server Tasks
+# WireGuard Server (RU) Tasks
 - name: Install WireGuard and dependencies
   apt:
     name:
       - wireguard
       - wireguard-tools
       - qrencode
-      - iptables-persistent
       - curl
       - wget
       - ufw
+      - iproute2
     state: present
   become: yes
   when: inventory_hostname in groups['wireguard_servers']
@@ -110,6 +120,13 @@
   become: yes
   when: inventory_hostname in groups['wireguard_servers']
 
+- name: Set public key permissions
+  file:
+    path: "{{ wireguard_config.public_key_path }}"
+    mode: '0644'
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
 - name: Read WireGuard private key
   slurp:
     src: "{{ wireguard_config.private_key_path }}"
@@ -134,27 +151,124 @@
     proto: udp
   become: yes
   when: inventory_hostname in groups['wireguard_servers']
+  ignore_errors: true
 
-- name: Configure UFW for WireGuard UI
+- name: Configure UFW for WireGuard
   ufw:
     rule: allow
-    port: "{{ wg_ui_config.port }}"
-    proto: tcp
+    port: "{{ wireguard_config.port }}"
+    proto: udp
   become: yes
   when: inventory_hostname in groups['wireguard_servers']
+  ignore_errors: true
 
-- name: Enable UFW
-  ufw:
-    state: enabled
-    policy: deny
-    direction: incoming
+- name: Configure UFW to allow forwarded traffic
+  shell: |
+    # Set UFW default policies
+    ufw --force enable
+    ufw default deny incoming
+    ufw default allow outgoing
+    
+    # Allow SSH
+    ufw allow ssh
+    
+    # Allow WireGuard
+    ufw allow {{ wireguard_config.port }}/udp
+    
+    # Critical: Set FORWARD policy to ACCEPT (not DROP)
+    ufw --force enable
+    iptables -P FORWARD ACCEPT
   become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+  ignore_errors: true
 
 - name: Allow SSH through UFW
   ufw:
     rule: allow
     name: OpenSSH
   become: yes
+  ignore_errors: true
+
+# Install tun2socks with native Shadowsocks support
+- name: Install unzip for binary extraction
+  apt:
+    name: unzip
+    state: present
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Download tun2socks binary
+  get_url:
+    url: https://github.com/xjasonlyu/tun2socks/releases/download/v2.6.0/tun2socks-linux-amd64.zip
+    dest: /tmp/tun2socks-linux-amd64.zip
+    mode: '0644'
+    timeout: 60
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Extract tun2socks binary
+  unarchive:
+    src: /tmp/tun2socks-linux-amd64.zip
+    dest: /tmp/
+    remote_src: yes
+    creates: /tmp/tun2socks-linux-amd64
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Install tun2socks binary
+  copy:
+    src: /tmp/tun2socks-linux-amd64
+    dest: /usr/local/bin/tun2socks
+    mode: '0755'
+    remote_src: yes
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Create tun2socks environment file
+  template:
+    src: tun2socks.env.j2
+    dest: /etc/default/tun2socks
+    mode: '0600'
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Add routing table for local IP
+  lineinfile:
+    path: /etc/iproute2/rt_tables
+    line: "20 lip"
+    state: present
+    insertafter: "^#"
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Add routing table for socks
+  lineinfile:
+    path: /etc/iproute2/rt_tables
+    line: "100 socks"
+    state: present
+    insertafter: "^#"
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Create tun2socks systemd service
+  template:
+    src: tun2socks.service.j2
+    dest: /etc/systemd/system/tun2socks.service
+    mode: '0644'
+  become: yes
+  notify: restart tun2socks
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Setup routing rules for WireGuard clients
+  shell: |
+    # Add routing rule for WireGuard clients to use socks table
+    ip rule add from 10.0.0.0/24 table socks 2>/dev/null || true
+    
+    # Add routes to socks table
+    ip route add default dev tun0 table socks 2>/dev/null || true
+    ip route add 192.168.0.0/24 dev eth0 table socks 2>/dev/null || true
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
 
 # Install WireGuard UI
 - name: Create wireguard-ui user
@@ -165,14 +279,84 @@
     home: /var/lib/wireguard-ui
     create_home: yes
   become: yes
-  when: inventory_hostname in groups['wireguard_servers']
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
 
-- name: Download WireGuard UI
+- name: Set proper ownership for wireguard-ui home directory
+  file:
+    path: /var/lib/wireguard-ui
+    state: directory
+    owner: wireguard-ui
+    group: wireguard-ui
+    mode: '0755'
+  become: yes
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+
+- name: Create WireGuard UI database directory
+  file:
+    path: /var/lib/wireguard-ui/db/server
+    state: directory
+    owner: wireguard-ui
+    group: wireguard-ui
+    mode: '0755'
+  become: yes
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+
+- name: Check internet connectivity
+  uri:
+    url: "https://api.github.com"
+    method: GET
+    timeout: 10
+  register: github_connectivity
+  ignore_errors: yes
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+
+- name: Download WireGuard UI (with retries)
   get_url:
-    url: "https://github.com/ngoduykhanh/wireguard-ui/releases/latest/download/wireguard-ui-linux-amd64.tar.gz"
+    url: "{{ wireguard_ui_url }}"
     dest: "/tmp/wireguard-ui.tar.gz"
     mode: '0644'
-  when: inventory_hostname in groups['wireguard_servers']
+    timeout: 30
+  register: wireguard_ui_download
+  retries: 3
+  delay: 10
+  until: wireguard_ui_download is succeeded
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+    - github_connectivity is succeeded
+
+- name: Download WireGuard UI via alternative method (wget)
+  shell: |
+    cd /tmp
+    wget -O wireguard-ui.tar.gz "{{ wireguard_ui_url }}" --timeout=30 --tries=3
+  args:
+    creates: /tmp/wireguard-ui.tar.gz
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+    - github_connectivity is failed or wireguard_ui_download is failed
+  ignore_errors: yes
+
+- name: Check if WireGuard UI was downloaded
+  stat:
+    path: "/tmp/wireguard-ui.tar.gz"
+  register: wireguard_ui_file
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+
+- name: Initialize wireguard_ui_file for hosts not in wireguard_servers group
+  set_fact:
+    wireguard_ui_file: {'stat': {'exists': False}}
+  when: inventory_hostname not in groups['wireguard_servers']
 
 - name: Extract WireGuard UI
   unarchive:
@@ -183,7 +367,10 @@
     group: root
     mode: '0755'
   become: yes
-  when: inventory_hostname in groups['wireguard_servers']
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+    - wireguard_ui_file.stat.exists
 
 - name: Create WireGuard UI configuration
   template:
@@ -191,7 +378,10 @@
     dest: /etc/wireguard-ui.env
     mode: '0600'
   become: yes
-  when: inventory_hostname in groups['wireguard_servers']
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+    - wireguard_ui_file.stat.exists
 
 - name: Create WireGuard UI systemd service
   template:
@@ -200,33 +390,52 @@
     mode: '0644'
   become: yes
   notify: restart wireguard-ui
-  when: inventory_hostname in groups['wireguard_servers']
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+    - wireguard_ui_file.stat.exists
 
-# SOCKS to TUN setup (on WireGuard server)
-- name: Install redsocks for SOCKS to TUN
-  apt:
-    name: redsocks
-    state: present
+# Start services in proper order
+- name: Start and enable tun2socks first
+  systemd:
+    name: tun2socks
+    state: started
+    enabled: yes
+    daemon_reload: yes
   become: yes
   when: inventory_hostname in groups['wireguard_servers']
 
-- name: Configure redsocks for Shadowsocks proxy
-  template:
-    src: redsocks.conf.j2
-    dest: /etc/redsocks.conf
-    mode: '0644'
-    backup: yes
-  become: yes
-  notify: restart redsocks
+- name: Wait for tun2socks to be ready
+  wait_for:
+    host: "{{ shadowsocks_server_ip }}"
+    port: "{{ shadowsocks_config.server_port }}"
+    timeout: 30
   when: inventory_hostname in groups['wireguard_servers']
+  ignore_errors: yes
 
-# Start services
 - name: Start and enable WireGuard
   systemd:
     name: "wg-quick@{{ wireguard_config.interface }}"
     state: started
     enabled: yes
     daemon_reload: yes
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Ensure routing is properly configured after WireGuard start
+  shell: |
+    # Wait for tun2socks to be ready
+    sleep 5
+    
+    # Ensure routing rules are in place
+    ip rule add from 10.0.0.0/24 table socks 2>/dev/null || true
+    
+    # Ensure socks table has correct routes
+    ip route add default dev tun0 table socks 2>/dev/null || true
+    ip route add 192.168.0.0/24 dev eth0 table socks 2>/dev/null || true
+    
+    # Ensure UFW allows forwarded traffic
+    iptables -P FORWARD ACCEPT 2>/dev/null || true
   become: yes
   when: inventory_hostname in groups['wireguard_servers']
 
@@ -237,22 +446,145 @@
     enabled: yes
     daemon_reload: yes
   become: yes
-  when: inventory_hostname in groups['wireguard_servers']
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+    - wireguard_ui_file.stat.exists
 
-- name: Start and enable redsocks
-  systemd:
-    name: redsocks
-    state: started
-    enabled: yes
-    daemon_reload: yes
-  become: yes
-  when: inventory_hostname in groups['wireguard_servers']
+- name: Wait for WireGuard UI to be ready
+  wait_for:
+    host: "{{ wireguard_server_ip }}"
+    port: "{{ wg_ui_config.port }}"
+    timeout: 30
+  when: 
+    - inventory_hostname in groups['wireguard_servers']
+    - wg_ui_config.enabled
+    - wireguard_ui_file.stat.exists
+  ignore_errors: yes
 
-- name: Display connection information
+# Display final information
+- name: Display connection information (with UI)
   debug:
     msg: |
-      Shadowsocks Server: {{ shadowsocks_server_ip }}:{{ shadowsocks_config.server_port }}
-      WireGuard Server: {{ wireguard_server_ip }}:{{ wireguard_config.port }}
-      WireGuard UI: http://{{ wireguard_server_ip }}:{{ wg_ui_config.port }}
-      Default credentials: {{ wg_ui_config.admin_username }}/{{ wg_ui_config.admin_password }}
+      🎉 Two-Stage WireGuard VPN Deployment Complete! 🎉
+      ===================================================
+      
+      🔐 Shadowsocks Server (EU):
+         Server: {{ shadowsocks_server_ip }}:{{ shadowsocks_config.server_port }}
+         Method: {{ shadowsocks_config.method }}
+         Protocol: Native Shadowsocks (no SOCKS needed)
+      
+      🛡️  WireGuard Server (RU):
+         Server: {{ wireguard_server_ip }}:{{ wireguard_config.port }}
+         Network: {{ wireguard_config.client_ip_range }}
+         Tunnel: tun2socks with native Shadowsocks support
+      
+      🌐 WireGuard UI:
+         URL: http://{{ wireguard_server_ip }}:{{ wg_ui_config.port }}
+         Username: {{ wg_ui_config.admin_username }}
+         Password: {{ wg_ui_config.admin_password }}
+      
+      ⚙️  Architecture:
+         User → WireGuard (RU) → tun2socks → Shadowsocks (EU) → Internet
+         - No SOCKS proxy needed
+         - Native Shadowsocks protocol support
+         - Automatic routing through tun0 interface
+      
+      📋 Next Steps:
+         1. Access WireGuard UI to add clients
+         2. Download client configurations
+         3. Configure clients to connect to WireGuard server
+         4. All client traffic automatically routed through Shadowsocks
+      
+      📁 Configuration Files:
+         - WireGuard: /etc/wireguard/{{ wireguard_config.interface }}.conf
+         - Shadowsocks Server: /etc/shadowsocks-libev/config.json
+         - tun2socks: /etc/default/tun2socks
+      
+      🚀 Ready to use!
+  when: 
+    - wg_ui_config.enabled
+    - wireguard_ui_file is defined
+    - wireguard_ui_file.stat.exists
+  run_once: true
+
+- name: Display connection information (UI disabled)
+  debug:
+    msg: |
+      🎉 Two-Stage WireGuard VPN Deployment Complete! 🎉
+      ===================================================
+      
+      🔐 Shadowsocks Server (EU):
+         Server: {{ shadowsocks_server_ip }}:{{ shadowsocks_config.server_port }}
+         Method: {{ shadowsocks_config.method }}
+         Protocol: Native Shadowsocks (no SOCKS needed)
+      
+      🛡️  WireGuard Server (RU):
+         Server: {{ wireguard_server_ip }}:{{ wireguard_config.port }}
+         Network: {{ wireguard_config.client_ip_range }}
+         Tunnel: tun2socks with native Shadowsocks support
+      
+      ⚙️  Architecture:
+         User → WireGuard (RU) → tun2socks → Shadowsocks (EU) → Internet
+         - No SOCKS proxy needed
+         - Native Shadowsocks protocol support
+         - Automatic routing through tun0 interface
+      
+      💡 Manual WireGuard Management:
+         - Generate keys: wg genkey | tee private.key | wg pubkey > public.key
+         - Add peer to /etc/wireguard/{{ wireguard_config.interface }}.conf
+         - Restart: systemctl restart wg-quick@{{ wireguard_config.interface }}
+      
+      📁 Configuration Files:
+         - WireGuard: /etc/wireguard/{{ wireguard_config.interface }}.conf
+         - Shadowsocks Server: /etc/shadowsocks-libev/config.json
+         - tun2socks: /etc/default/tun2socks
+      
+      🚀 Ready to use!
+  when: not wg_ui_config.enabled
+  run_once: true
+
+- name: Display connection information (UI failed)
+  debug:
+    msg: |
+      🎉 Two-Stage WireGuard VPN Deployment Complete! 🎉
+      ===================================================
+      
+      🔐 Shadowsocks Server (EU):
+         Server: {{ shadowsocks_server_ip }}:{{ shadowsocks_config.server_port }}
+         Method: {{ shadowsocks_config.method }}
+         Protocol: Native Shadowsocks (no SOCKS needed)
+      
+      🛡️  WireGuard Server (RU):
+         Server: {{ wireguard_server_ip }}:{{ wireguard_config.port }}
+         Network: {{ wireguard_config.client_ip_range }}
+         Tunnel: tun2socks with native Shadowsocks support
+      
+      ⚠️  WireGuard UI: Unavailable (download issues)
+      
+      ⚙️  Architecture:
+         User → WireGuard (RU) → tun2socks → Shadowsocks (EU) → Internet
+         - No SOCKS proxy needed
+         - Native Shadowsocks protocol support
+         - Automatic routing through tun0 interface
+      
+      💡 Manual WireGuard Management:
+         - Generate keys: wg genkey | tee private.key | wg pubkey > public.key
+         - Add peer to /etc/wireguard/{{ wireguard_config.interface }}.conf
+         - Restart: systemctl restart wg-quick@{{ wireguard_config.interface }}
+      
+      🔧 To retry WireGuard UI installation:
+         - Fix connectivity issues and re-run playbook
+         - Or set wg_ui_config.enabled: false to disable permanently
+      
+      📁 Configuration Files:
+         - WireGuard: /etc/wireguard/{{ wireguard_config.interface }}.conf
+         - Shadowsocks Server: /etc/shadowsocks-libev/config.json
+         - tun2socks: /etc/default/tun2socks
+      
+      🚀 Ready to use!
+  when: 
+    - wg_ui_config.enabled
+    - wireguard_ui_file is defined
+    - not wireguard_ui_file.stat.exists
   run_once: true
