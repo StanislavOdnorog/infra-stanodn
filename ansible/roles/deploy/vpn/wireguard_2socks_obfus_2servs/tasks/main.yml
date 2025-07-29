@@ -439,6 +439,65 @@
   become: yes
   when: inventory_hostname in groups['wireguard_servers']
 
+- name: Add memory management to prevent OOM issues
+  lineinfile:
+    path: /etc/systemd/system/tun2socks.service
+    line: "MemoryLimit=512M"
+    insertafter: "^Type=simple"
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Add restart policy for tun2socks
+  lineinfile:
+    path: /etc/systemd/system/tun2socks.service
+    line: "Restart=always"
+    insertafter: "^Type=simple"
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Add restart delay for tun2socks
+  lineinfile:
+    path: /etc/systemd/system/tun2socks.service
+    line: "RestartSec=10"
+    insertafter: "^Restart=always"
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Create persistent routing restoration script
+  copy:
+    content: |
+      #!/bin/bash
+      # Restore routing rules for WireGuard + tun2socks setup
+      
+      # Wait for tun0 interface to be ready
+      while ! ip link show tun0 >/dev/null 2>&1; do
+          sleep 1
+      done
+      
+      # Ensure routing rules are in place
+      ip rule add from 10.0.0.0/24 table socks 2>/dev/null || true
+      
+      # Ensure socks table has correct routes
+      ip route add default dev tun0 table socks 2>/dev/null || true
+      ip route add 192.168.0.0/24 dev eth0 table socks 2>/dev/null || true
+      
+      # Ensure UFW allows forwarded traffic
+      iptables -P FORWARD ACCEPT 2>/dev/null || true
+      
+      echo "Routing rules restored at $(date)"
+    dest: /usr/local/bin/restore-vpn-routing.sh
+    mode: '0755'
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
+- name: Add routing restoration to tun2socks service
+  lineinfile:
+    path: /etc/systemd/system/tun2socks.service
+    line: "ExecStartPost=/usr/local/bin/restore-vpn-routing.sh"
+    insertafter: "^ExecStartPost=/bin/bash -c 'echo \"nameserver 8.8.8.8\" >> /etc/resolv.conf'"
+  become: yes
+  when: inventory_hostname in groups['wireguard_servers']
+
 - name: Start and enable WireGuard UI
   systemd:
     name: wireguard-ui
