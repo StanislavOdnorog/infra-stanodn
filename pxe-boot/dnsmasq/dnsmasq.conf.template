@@ -1,0 +1,14 @@
+interface=${DHCP_INTERFACE}
+bind-interfaces
+dhcp-range=${DHCP_RANGE_START},${DHCP_RANGE_END},${DHCP_LEASE_TIME}
+
+# BIOS
+dhcp-match=set:bios,60,PXEClient:Arch:00000
+dhcp-boot=tag:bios,netboot.xyz.kpxe,,${DHCP_IP_ADDRESS}
+
+# UEFI
+dhcp-match=set:efi64,60,PXEClient:Arch:00007
+dhcp-boot=tag:efi64,netboot.xyz.efi,,${DHCP_IP_ADDRESS}
+
+enable-tftp
+tftp-root=/assets

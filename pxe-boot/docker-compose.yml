@@ -1,0 +1,34 @@
+---
+
+services:
+  netbootxyz:
+    image: ghcr.io/netbootxyz/netbootxyz
+    container_name: netbootxyz
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - MENU_VERSION=2.0.84
+      - WEB_APP_PORT=3000
+    volumes:
+      - ./config:/config
+      - ./assets:/assets
+    ports:
+      - "3000:3000"
+      - "69:69/udp"
+    restart: unless-stopped
+
+  dnsmasq:
+    build: ./dnsmasq
+    container_name: dnsmasq
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - DHCP_INTERFACE=eth0
+      - DHCP_RANGE_START=192.168.1.50
+      - DHCP_RANGE_END=192.168.1.250
+      - DHCP_LEASE_TIME=12h
+      - DHCP_IP_ADDRESS=192.168.1.3
+    volumes:
+      - ./assets:/assets
+    restart: always
