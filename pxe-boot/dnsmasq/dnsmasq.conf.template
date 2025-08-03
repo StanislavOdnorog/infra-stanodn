@@ -20,4 +20,4 @@ dhcp-match=set:efi64-3,60,PXEClient:Arch:0000B
 dhcp-boot=tag:efi64-3,ipxe-arm64.efi,,${PXE_IP_ADDRESS}
 
 enable-tftp
-tftp-root=/var/lib/tftpboot
+tftp-root=/assets/tftpboot

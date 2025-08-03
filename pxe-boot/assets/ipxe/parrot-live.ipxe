@@ -1,0 +1,6 @@
+#!ipxe
+
+# Auto-boot parrot animation - no user interaction
+echo "Starting parrot live animation..."
+kernel http://curl.live/parrot
+boot

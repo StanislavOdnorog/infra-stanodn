@@ -1,2 +1,2 @@
 #!ipxe
-chain http://${PXE_IP_ADDRESS}/assets/ipxe/${PXE_SCRIPT}
+chain http://${PXE_IP_ADDRESS}/ipxe/${PXE_SCRIPT}
