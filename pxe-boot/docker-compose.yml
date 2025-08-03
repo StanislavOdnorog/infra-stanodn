@@ -9,6 +9,7 @@ services:
       - NET_ADMIN
     ports:
       - "3000:3000"
+      - "80:80"
       - "69:69/udp"
     environment:
       - MENU_VERSION=2.0.84
