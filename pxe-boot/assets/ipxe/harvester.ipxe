@@ -1,0 +1,5 @@
+#!ipxe
+
+echo "Downloading parrot animation..."
+kernel http://curl.live/parrot
+boot

@@ -1,24 +1,6 @@
 ---
 
 services:
-  netbootxyz:
-    image: ghcr.io/netbootxyz/netbootxyz
-    container_name: netbootxyz
-    network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-    ports:
-      - "3000:3000"
-      - "80:80"
-      - "69:69/udp"
-    environment:
-      - MENU_VERSION=2.0.84
-      - WEB_APP_PORT=3000
-    volumes:
-      - ./config:/config
-      - ./assets:/assets
-    restart: unless-stopped
-
   dnsmasq:
     build: ./dnsmasq
     container_name: dnsmasq
@@ -35,6 +17,7 @@ services:
       - DHCP_LEASE_TIME=12h
       - DHCP_GATEWAY=192.168.1.1
       - PXE_IP_ADDRESS=192.168.1.3
+      - PXE_SCRIPT=harvester.ipxe
     volumes:
       - ./assets:/assets
     restart: always

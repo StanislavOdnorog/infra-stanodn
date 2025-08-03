@@ -5,16 +5,19 @@ dhcp-option=3,${DHCP_GATEWAY}
 
 # Standard PC BIOS
 dhcp-match=set:bios,60,PXEClient:Arch:00000
-dhcp-boot=tag:bios,netboot.xyz.kpxe,,${PXE_IP_ADDRESS}
+dhcp-boot=tag:bios,undionly.kpxe,,${PXE_IP_ADDRESS}
 
 # 64-bit x86 EFI
 dhcp-match=set:efi64,60,PXEClient:Arch:00007
-dhcp-boot=tag:efi64,netboot.xyz.efi,,${PXE_IP_ADDRESS}
+dhcp-boot=tag:efi64,ipxe.efi,,${PXE_IP_ADDRESS}
 
 # 64-bit x86 EFI (obsolete)
 dhcp-match=set:efi64-2,60,PXEClient:Arch:00009
-dhcp-boot=tag:efi64-2,netboot.xyz.efi,,${PXE_IP_ADDRESS}
+dhcp-boot=tag:efi64-2,ipxe.efi,,${PXE_IP_ADDRESS}
 
 # 64-bit UEFI for arm64
 dhcp-match=set:efi64-3,60,PXEClient:Arch:0000B
-dhcp-boot=tag:efi64-3,netboot.xyz-arm64.efi,,${PXE_IP_ADDRESS}
+dhcp-boot=tag:efi64-3,ipxe-arm64.efi,,${PXE_IP_ADDRESS}
+
+enable-tftp
+tftp-root=/var/lib/tftpboot
