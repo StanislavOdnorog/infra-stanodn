@@ -1,6 +1,7 @@
 interface=${DHCP_INTERFACE}
 bind-interfaces
 dhcp-range=${DHCP_RANGE_START},${DHCP_RANGE_END},${DHCP_LEASE_TIME}
+dhcp-option=3,${DHCP_GATEWAY}
 
 # Standard PC BIOS
 dhcp-match=set:bios,60,PXEClient:Arch:00000
