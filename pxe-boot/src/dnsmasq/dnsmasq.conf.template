@@ -19,5 +19,8 @@ dhcp-boot=tag:efi64-2,ipxe.efi,,${PXE_IP_ADDRESS}
 dhcp-match=set:efi64-3,60,PXEClient:Arch:0000B
 dhcp-boot=tag:efi64-3,ipxe-arm64.efi,,${PXE_IP_ADDRESS}
 
+# iPXE chain URL - tells embedded script which file to load
+dhcp-option=209,http://${PXE_IP_ADDRESS}/ipxe/${PXE_SCRIPT}
+
 enable-tftp
 tftp-root=/assets/tftpboot
