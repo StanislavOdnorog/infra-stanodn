@@ -1,10 +1,8 @@
-FROM alpine:3.19 AS builder
-
-# Accept build arguments
-ARG PXE_SCRIPT=parrot-live.ipxe
+FROM alpine:3.19
 
 # Install all dependencies for iPXE building, nginx, and dnsmasq
 RUN apk add --no-cache \
+    curl \
     git \
     gcc \
     musl-dev \
@@ -20,14 +18,16 @@ RUN apk add --no-cache \
     nginx \
     dnsmasq \
     gettext \
-    supervisor
+    yq
 
 # Build iPXE binaries
 WORKDIR /build
 RUN git clone https://github.com/ipxe/ipxe.git
 
 # Copy our embedded script
-COPY ./build-ipxe/ipxe/${PXE_SCRIPT} /build/boot.ipxe
+COPY ./ipxe/default.ipxe /tmp/boot.ipxe
+ARG PXE_IP_ADDRESS
+RUN envsubst < /tmp/boot.ipxe > /build/boot.ipxe
 
 # Build iPXE with embedded script
 WORKDIR /build/ipxe/src
@@ -39,10 +39,6 @@ RUN mkdir -p /assets/tftpboot
 RUN cp bin/undionly.kpxe /assets/tftpboot/
 RUN cp bin-x86_64-efi/ipxe.efi /assets/tftpboot/
 
-FROM alpine:3.19
-
-COPY --from=builder /assets/tftpboot/ /assets/tftpboot/
-
 # Setup nginx
 RUN mkdir -p /run/nginx
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
@@ -50,12 +46,12 @@ COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 # Setup dnsmasq
 COPY ./dnsmasq/dnsmasq.conf.template /tmp/dnsmasq.conf.template
 
-# Setup supervisor to manage multiple processes
-COPY supervisord.conf /etc/supervisord.conf
-
 # Create entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# Copy custom ipxe scripts
+RUN mkdir /share -p
 
 # Expose ports
 EXPOSE 53/udp 67/udp 69/udp 80
@@ -63,5 +59,7 @@ EXPOSE 53/udp 67/udp 69/udp 80
 # Set working directory
 WORKDIR /
 
+# Copy config file
+COPY ./config.yaml /tmp/config.yaml
+
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["supervisord", "-c", "/etc/supervisord.conf", "-n"]

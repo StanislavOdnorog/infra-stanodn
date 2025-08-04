@@ -1,0 +1,16 @@
+images:
+  harvester:
+    download:
+      vmlinuz: "https://releases.rancher.com/harvester/v1.6.0-rc4/harvester-v1.6.0-rc4-vmlinuz-amd64"
+      initrd: "https://releases.rancher.com/harvester/v1.6.0-rc4/harvester-v1.6.0-rc4-initrd-amd64"
+    script: |
+      #!ipxe
+      set base-url http://${PXE_IP_ADDRESS}/harvester
+      set kernel-params root=live:CDLABEL=Harvester_Installer
+      set kernel-params ${kernel-params} modprobe.blacklist=dm_multipath,usbhid
+      set kernel-params ${kernel-params} rd.driver.blacklist=dm_multipath
+      set kernel-params ${kernel-params} harvester.install.automatic=true
+      set kernel-params ${kernel-params} ip=dhcp console=ttyS0,115200n8
+      kernel ${base-url}/vmlinuz initrd=initrd ${kernel-params}
+      initrd ${base-url}/initrd
+      boot

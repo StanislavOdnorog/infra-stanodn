@@ -5,7 +5,8 @@ services:
     build: 
       context: ./src
       args:
-        PXE_SCRIPT: parrot-live.ipxe
+        PXE_IP_ADDRESS: ${PXE_IP_ADDRESS}
+        PXE_SCRIPT: ${PXE_SCRIPT}
     container_name: pxe-server
     network_mode: "host"
     cap_add:
@@ -16,10 +17,11 @@ services:
       - "69:69/udp"
       - "80:80"
     environment:
-      - DHCP_INTERFACE=eth0
-      - DHCP_RANGE_START=192.168.1.50
-      - DHCP_RANGE_END=192.168.1.250
-      - DHCP_LEASE_TIME=12h
-      - DHCP_GATEWAY=192.168.1.1
-      - PXE_IP_ADDRESS=192.168.1.10
+      - DHCP_INTERFACE=${DHCP_INTERFACE}
+      - DHCP_RANGE_START=${DHCP_RANGE_START}
+      - DHCP_RANGE_END=${DHCP_RANGE_END}
+      - DHCP_LEASE_TIME=${DHCP_LEASE_TIME}
+      - DHCP_GATEWAY=${DHCP_GATEWAY}
+      - PXE_SCRIPT=${PXE_SCRIPT}
+      - PXE_IP_ADDRESS=${PXE_IP_ADDRESS}
     restart: always
