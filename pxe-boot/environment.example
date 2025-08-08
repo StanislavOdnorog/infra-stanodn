@@ -1,0 +1,25 @@
+# Multi-Distro PXE Boot Server Configuration
+
+# Network Interface for DHCP
+DHCP_INTERFACE=eth0
+
+# DHCP Range 
+DHCP_RANGE_START=192.168.1.50
+DHCP_RANGE_END=192.168.1.250
+
+# DHCP Settings
+DHCP_LEASE_TIME=12h
+DHCP_GATEWAY=192.168.1.1
+
+# PXE Server IP (where clients will download files from)
+PXE_IP_ADDRESS=192.168.1.3
+
+# Auto-select OS to boot (ubuntu, harvester, rocky, debian, arch)
+PXE_AUTO_OS=ubuntu
+
+# Boot Configuration Variables
+PXE_BOOT_HOSTNAME=node
+PXE_BOOT_USER=admin
+PXE_BOOT_PASS=password
+PXE_BOOT_DISK=/dev/sda
+PXE_BOOT_SSH_KEY="ssh_key"

@@ -1,16 +1,101 @@
 images:
-  harvester:
+  # Clean Ubuntu Server Installation
+  ubuntu:
     download:
-      vmlinuz: "https://releases.rancher.com/harvester/v1.6.0-rc4/harvester-v1.6.0-rc4-vmlinuz-amd64"
-      initrd: "https://releases.rancher.com/harvester/v1.6.0-rc4/harvester-v1.6.0-rc4-initrd-amd64"
+      ubuntu.iso: "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-live-server-amd64.iso"
+      vmlinuz: "# manual file - extract from ISO /casper/hwe-vmlinuz or /casper/vmlinuz"
+      initrd: "# manual file - extract from ISO /casper/hwe-initrd or /casper/initrd"
+      rootfs.squashfs: "# manual file - extract from ISO /casper/rootfs.squashfs or similar"
+    write:
+      user-data: |
+        #cloud-config
+
+        autoinstall:
+          version: 1
+          interactive-sections: []
+          refresh-installer:
+            update: true
+            channel: latest/edge
+          apt:
+            disable_components: []
+            fallback: abort
+            geoip: false
+            preserve_sources_list: false
+          identity:
+            realname: 'Ubuntu Server'
+            hostname: ${PXE_BOOT_HOSTNAME}
+            username: ubuntu
+            password: ${PXE_BOOT_PASS}
+          storage:
+            layout:
+              name: lvm
+              match:
+                path: ${PXE_BOOT_DISK}
+          packages:
+            - git
+            - curl
+            - wget
+            - vim
+            - htop
+            - tree
+            - net-tools
+            - openssh-server
+            - build-essential
+          drivers:
+            install: true
+          kernel:
+            package: linux-generic
+          keyboard:
+            layout: us
+            toggle: null
+            variant: ''
+          locale: en_US.UTF-8
+          network:
+            version: 2
+            ethernets:
+              ens33:
+                match:
+                  name: "en*"
+                dhcp4: true
+              eth1:
+                match:
+                  name: "eth*"
+                dhcp4: true
+          user-data:
+            users:
+              - default
+              - name: ${PXE_BOOT_USER}
+                gecos: System Administrator
+                groups: [adm, audio, cdrom, dialout, dip, floppy, lxd, netdev, plugdev, sudo, video]
+                sudo: "ALL=(ALL) NOPASSWD:ALL"
+                shell: /bin/bash
+                lock_passwd: false
+                plain_text_passwd: ${PXE_BOOT_PASS}
+                ssh_authorized_keys:
+                  - ${PXE_BOOT_SSH_KEY}
+            disable_root: false
+          source:
+            id: ubuntu-server-minimal
+            search_drivers: true
+          ssh:
+            allow-pw: true
+            authorized-keys:
+              - ${PXE_BOOT_SSH_KEY}
+            install-server: true
+
+          updates: security
+          timezone: UTC
+          late-commands:
+            - curtin in-target --target=/target -- systemctl enable ssh
+            - curtin in-target --target=/target -- apt update
+            - curtin in-target --target=/target -- apt upgrade -y
+      meta-data: ""
     script: |
       #!ipxe
-      set base-url http://${PXE_IP_ADDRESS}/harvester
-      set kernel-params root=live:CDLABEL=Harvester_Installer
-      set kernel-params ${kernel-params} modprobe.blacklist=dm_multipath,usbhid
-      set kernel-params ${kernel-params} rd.driver.blacklist=dm_multipath
-      set kernel-params ${kernel-params} harvester.install.automatic=true
-      set kernel-params ${kernel-params} ip=dhcp console=ttyS0,115200n8
-      kernel ${base-url}/vmlinuz initrd=initrd ${kernel-params}
+      set base-url http://${PXE_IP_ADDRESS}/ubuntu
+      set ubuntu_iso_url ${base-url}/ubuntu.iso
+      
+      # Boot Ubuntu 22.04 live system with autoinstall
+      kernel ${base-url}/vmlinuz boot=casper netboot=url url=${base-url}/ubuntu.iso autoinstall ds=nocloud-net;s=${base-url}/ root=/dev/ram0 ramdisk_size=1500000 ip=dhcp fetch=${base-url}/rootfs.squashfs
       initrd ${base-url}/initrd
-      boot
+      boot || goto failed
