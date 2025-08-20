@@ -13,7 +13,7 @@ RUN apk add --no-cache \
     perl \
     xz-dev \
     mtools \
-    cdrkit \
+    xorriso \
     syslinux \
     nginx \
     dnsmasq \

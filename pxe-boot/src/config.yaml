@@ -3,9 +3,9 @@ images:
   ubuntu:
     download:
       ubuntu.iso: "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-live-server-amd64.iso"
-      vmlinuz: "# manual file - extract from ISO /casper/hwe-vmlinuz or /casper/vmlinuz"
-      initrd: "# manual file - extract from ISO /casper/hwe-initrd or /casper/initrd"
-      rootfs.squashfs: "# manual file - extract from ISO /casper/rootfs.squashfs or similar"
+      vmlinuz: "auto-extract:ubuntu.iso:/casper/hwe-vmlinuz"
+      initrd: "auto-extract:ubuntu.iso:/casper/hwe-initrd"
+      rootfs.squashfs: "auto-extract:ubuntu.iso:/casper/ubuntu-server-minimal.squashfs"
     write:
       user-data: |
         #cloud-config
@@ -97,5 +97,84 @@ images:
       
       # Boot Ubuntu 22.04 live system with autoinstall
       kernel ${base-url}/vmlinuz boot=casper netboot=url url=${base-url}/ubuntu.iso autoinstall ds=nocloud-net;s=${base-url}/ root=/dev/ram0 ramdisk_size=1500000 ip=dhcp fetch=${base-url}/rootfs.squashfs
+      initrd ${base-url}/initrd
+      boot || goto failed
+
+  # Proxmox VE Installation
+  proxmox:
+    download:
+      proxmox.iso: "https://download.proxmox.com/iso/proxmox-ve_8.1-1.iso"
+      vmlinuz: "auto-extract:proxmox.iso:/boot/vmlinuz-6.5.11-8-pve"
+      initrd: "auto-extract:proxmox.iso:/boot/initrd.img-6.5.11-8-pve"
+    write:
+      preseed.cfg: |
+        # Proxmox VE Automated Installation Preseed
+        # Locale and keyboard
+        d-i debian-installer/locale string en_US.UTF-8
+        d-i keyboard-configuration/xkb-keymap select us
+        d-i keyboard-configuration/layoutcode string us
+        
+        # Network configuration
+        d-i netcfg/choose_interface select auto
+        d-i netcfg/get_hostname string ${PXE_BOOT_HOSTNAME}
+        d-i netcfg/get_domain string local
+        
+        # Mirror settings
+        d-i mirror/country string manual
+        d-i mirror/http/hostname string download.proxmox.com
+        d-i mirror/http/directory string /debian
+        d-i mirror/http/proxy string
+        
+        # User account setup
+        d-i passwd/root-password-crypted password ${PXE_BOOT_PASS_HASH}
+        d-i passwd/user-fullname string ${PXE_BOOT_USER}
+        d-i passwd/username string ${PXE_BOOT_USER}
+        d-i passwd/user-password-crypted password ${PXE_BOOT_PASS_HASH}
+        d-i passwd/user-password-again password ${PXE_BOOT_PASS_HASH}
+        
+        # Partitioning
+        d-i partman-auto/method string lvm
+        d-i partman-auto-lvm/guided_size string max
+        d-i partman-lvm/device_remove_lvm boolean true
+        d-i partman-md/device_remove_md boolean true
+        d-i partman-lvm/confirm boolean true
+        d-i partman-lvm/confirm_nooverwrite boolean true
+        d-i partman-auto/choose_recipe select atomic
+        d-i partman-partitioning/confirm_write_new_label boolean true
+        d-i partman/choose_partition select finish
+        d-i partman/confirm boolean true
+        d-i partman/confirm_nooverwrite boolean true
+        
+        # Package installation
+        d-i pkgsel/include string openssh-server
+        d-i pkgsel/update-policy select none
+        d-i pkgsel/upgrade select full-upgrade
+        
+        # Boot loader installation
+        d-i grub-installer/only_debian boolean true
+        d-i grub-installer/with_other_os boolean true
+        d-i grub-installer/bootdev string ${PXE_BOOT_DISK}
+        
+        # Finishing up
+        d-i finish-install/reboot_in_progress note
+        d-i debian-installer/exit/halt boolean false
+        d-i debian-installer/exit/poweroff boolean false
+        
+        # Proxmox specific
+        d-i preseed/late_command string \
+          in-target apt-get update; \
+          in-target apt-get install -y proxmox-ve postfix open-iscsi; \
+          in-target systemctl enable ssh; \
+          in-target mkdir -p /root/.ssh; \
+          in-target echo "${PXE_BOOT_SSH_KEY}" > /root/.ssh/authorized_keys; \
+          in-target chmod 600 /root/.ssh/authorized_keys; \
+          in-target chmod 700 /root/.ssh
+    script: |
+      #!ipxe
+      set base-url http://${PXE_IP_ADDRESS}/proxmox
+      set proxmox_iso_url ${base-url}/proxmox.iso
+      
+      # Boot Proxmox VE installer with preseed
+      kernel ${base-url}/vmlinuz boot=live fetch=${base-url}/proxmox.iso root=/dev/ram0 ramdisk_size=1500000 ip=dhcp preseed/url=http://${PXE_IP_ADDRESS}/proxmox/preseed.cfg
       initrd ${base-url}/initrd
       boot || goto failed

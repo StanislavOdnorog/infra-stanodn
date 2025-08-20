@@ -10,11 +10,11 @@ services:
     cap_add:
       - NET_ADMIN
     container_name: pxe-server
-    ports:
-      - "53:53/udp"
-      - "67:67/udp" 
-      - "69:69/udp"
-      - "80:80"
+    #ports:
+    #  - "53:53/udp"
+    #  - "67:67/udp" 
+    #  - "69:69/udp"
+    #  - "80:80"
     environment:
       - DHCP_INTERFACE=${DHCP_INTERFACE}
       - DHCP_RANGE_START=${DHCP_RANGE_START}

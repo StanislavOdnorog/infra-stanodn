@@ -33,6 +33,10 @@ log_download() {
     echo "⬇️  [DOWNLOAD] $*"
 }
 
+log_extract() {
+    echo "📦 [EXTRACT] $*"
+}
+
 log_write() {
     echo "📝 [WRITE] $*"
 }
@@ -108,6 +112,7 @@ download_files() {
     
     local download_count=0
     local skip_count=0
+    local extract_count=0
     
     # Create temporary file for download list to avoid subshell variable issues
     local temp_file=$(mktemp)
@@ -120,25 +125,56 @@ download_files() {
         url=$(echo "$url_template" | envsubst)
         target_path="$os_dir/$file"
 
-        if [ -f "$target_path" ]; then
-            log_info "$target_path already exists, skipping"
-            skip_count=$((skip_count + 1))
-        else
-            log_download "$url -> $target_path"
-            if curl -L --fail "$url" -o "$target_path"; then
-                download_count=$((download_count + 1))
-                log_success "Downloaded $file"
-            else
-                log_error "Failed to download $file from $url"
-                rm -f "$target_path"
+        # Check if this is an auto-extract request
+        if [[ "$url" == auto-extract:* ]]; then
+            # Parse auto-extract format: auto-extract:source_file:iso_path
+            local source_file=$(echo "$url" | cut -d: -f2)
+            local iso_path=$(echo "$url" | cut -d: -f3)
+            local source_path="$os_dir/$source_file"
+            
+            if [ ! -f "$source_path" ]; then
+                log_error "Source file $source_file not found for auto-extract"
                 rm -f "$temp_file"
                 exit 1
+            fi
+            
+            if [ -f "$target_path" ]; then
+                log_info "$target_path already exists, skipping extraction"
+                skip_count=$((skip_count + 1))
+            else
+                log_extract "$iso_path from $source_file -> $file"
+                if xorriso -osirrox on -indev "$source_path" -extract "$iso_path" "$target_path" >/dev/null 2>&1; then
+                    extract_count=$((extract_count + 1))
+                    log_success "Extracted $file"
+                else
+                    log_error "Failed to extract $file from $source_file"
+                    rm -f "$target_path"
+                    rm -f "$temp_file"
+                    exit 1
+                fi
+            fi
+        else
+            # Regular download
+            if [ -f "$target_path" ]; then
+                log_info "$target_path already exists, skipping"
+                skip_count=$((skip_count + 1))
+            else
+                log_download "$url -> $target_path"
+                if curl -L --fail "$url" -o "$target_path"; then
+                    download_count=$((download_count + 1))
+                    log_success "Downloaded $file"
+                else
+                    log_error "Failed to download $file from $url"
+                    rm -f "$target_path"
+                    rm -f "$temp_file"
+                    exit 1
+                fi
             fi
         fi
     done < "$temp_file"
     
     rm -f "$temp_file"
-    log_success "Downloads completed: $download_count new, $skip_count skipped"
+    log_success "Downloads completed: $download_count new, $skip_count skipped, $extract_count extracted"
 }
 
 write_config_files() {
