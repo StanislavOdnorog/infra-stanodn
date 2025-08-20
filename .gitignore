@@ -29,7 +29,7 @@ variables.auto.tfvars
 pihole/config/custom.list
 
 # PXE Boot
-pxe-boot/src/share/*
+pxe-boot/share/*
 
 # VIM
 *.swp
