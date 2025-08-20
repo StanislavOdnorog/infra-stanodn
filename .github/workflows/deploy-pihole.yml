@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,4 +23,5 @@ jobs:
           server_port: ${{ secrets.PIHOLE_SERVER_PORT }}
           server_ssh_key: ${{ secrets.PIHOLE_SERVER_SSH_KEY }}
           service_name: 'pihole'
+
           source_path: 'pihole' 
