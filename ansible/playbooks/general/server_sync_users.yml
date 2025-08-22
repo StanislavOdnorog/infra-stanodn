@@ -1,8 +1,0 @@
----
-- name: Sync users and profiles
-  hosts: "{{ target }}"
-  become: yes
-  vars_files:
-    - ../../group_vars/users.yml
-  roles:
-    - configure/sync_users

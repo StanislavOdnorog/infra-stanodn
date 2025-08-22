@@ -1,0 +1,10 @@
+---
+- name: Configure sudo without password for present users
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/{{ user.name }}
+    line: "{{ user.name }} ALL=(ALL) NOPASSWD:ALL"
+    create: yes
+    owner: root
+    group: root
+    mode: '0440'
+    validate: 'visudo -cf %s'

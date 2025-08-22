@@ -1,0 +1,16 @@
+---
+- name: Include tasks for prepare
+  ansible.builtin.include_role:
+    name: "common/server"
+    tasks_from: "{{ task }}.yml"
+  loop: "{{ tasks_to_include }}"
+  loop_control:
+    loop_var: task
+  vars:
+    tasks_to_include:
+      - hostname
+      - resolved
+      - packages
+      - firewall
+      - security
+      - optimization

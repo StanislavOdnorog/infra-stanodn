@@ -10,7 +10,9 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh_authorized_keys:
-      - {{ cloud_init_ssh_key }}
+    {% for key in cloud_init_ssh_keys %}
+      - {{ key }}
+    {% endfor %}
 
 # Package Configuration
 package_update: true
@@ -27,24 +29,6 @@ packages:
   - dnsutils
   - ufw
   - fail2ban
-
-# Network Configuration
-network:
-  version: 2
-  ethernets:
-    eth0:
-      dhcp4: true
-      dhcp6: false
-      match:
-        name: en*
-      set-name: eth0
-      optional: false
-      dhcp4-overrides:
-        use-dns: true
-        use-domains: true
-        route-metric: 100
-      nameservers:
-        addresses: [8.8.8.8, 8.8.4.4]
 
 # System Configuration
 timezone: UTC

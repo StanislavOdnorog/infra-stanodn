@@ -1,453 +1,260 @@
 # StanODN Infrastructure
 
-A comprehensive infrastructure-as-code project for managing a complete homelab environment using Docker, Ansible, Jenkins, and Nginx reverse proxy. This repository provides automated deployment, configuration management, and monitoring for various services including VPN, DNS filtering, CI/CD, and observability stack.
+Complete infrastructure setup for StanODN lab environment using Proxmox, Terraform, and Ansible.
 
 ## Architecture Overview
 
-The StanODN infrastructure is designed as a modular, containerized homelab setup that includes:
+The infrastructure consists of:
+- **Proxmox VE** - Virtualization platform
+- **Terraform** - Infrastructure as Code for VM provisioning
+- **Ansible** - Configuration management and automation
+- **4 VMs** with specific roles:
+  - `stan-runner01` - GitLab/Jenkins CI/CD Runner (2 CPU, 6GB RAM)
+  - `stan-ns01` - DNS/DHCP Server (1 CPU, 4GB RAM)
+  - `stan-gw01` - NGINX Gateway (1 CPU, 4GB RAM)
+  - `stan-acn01` - Jenkins/Ansible Control Node (4 CPU, 16GB RAM)
 
-- **Reverse Proxy Layer**: Nginx-based load balancer with SSL termination
-- **VPN Access**: Pritunl VPN server for secure remote access
-- **DNS & Network Security**: Pi-hole for ad-blocking and DNS management
-- **CI/CD Pipeline**: Jenkins for automated deployments
-- **Monitoring Stack**: Prometheus + Grafana for observability
-- **Infrastructure Automation**: Ansible for configuration management
-- **Virtualization Integration**: Proxmox VE cluster management
+## Prerequisites
 
-## Project Structure
+- Physical machine with at least 8 CPU cores and 32GB RAM
+- Ubuntu 22.04 LTS for the host system
+- Network access for downloading packages and templates
+- USB drive for PXE boot configuration
 
-```
-stanodn-infra/
-├── ansible/                    # Infrastructure automation and configuration management
-│   ├── playbooks/             # Ansible playbooks for various tasks
-│   │   ├── general/           # General server management playbooks
-│   │   │   ├── docker-deploy.yml      # Deploy Docker applications
-│   │   │   ├── docker-install.yml     # Install Docker and Docker Compose
-│   │   │   ├── ping.yml               # Infrastructure health checks
-│   │   │   └── server_sync_users.yml  # User synchronization
-│   │   └── proxmox/           # Proxmox-specific automation
-│   │       ├── vm/            # Virtual machine management
-│   │       └── template/      # VM template management
-│   ├── inventory/             # Host and group definitions
-│   │   ├── static.yml         # Static infrastructure hosts
-│   │   ├── proxmox.yml        # Dynamic Proxmox inventory
-│   │   └── *.example          # Example configuration files
-│   ├── group_vars/            # Ansible group variables
-│   │   ├── all.yml            # Global variables
-│   │   ├── users.yml          # User management configuration
-│   │   └── cloud-init.yml     # Cloud-init VM configuration
-│   ├── roles/                 # Custom Ansible roles
-│   │   ├── configure/         # Configuration roles
-│   │   │   ├── docker/        # Docker installation and setup
-│   │   │   ├── docker-deploy/ # Application deployment automation
-│   │   │   └── sync_users/    # User synchronization
-│   │   └── provision/         # Infrastructure provisioning
-│   │       └── proxmox/       # Proxmox VM and template provisioning
-│   └── ansible.cfg            # Ansible configuration
-├── docker-apps/               # Containerized applications
-│   └── monitoring/            # Monitoring stack (Prometheus + Grafana)
-│       ├── prometheus/        # Prometheus configuration
-│       ├── grafana/          # Grafana configuration and dashboards
-│       └── docker-compose.yml # Monitoring stack deployment
-├── reverse-proxy/             # Nginx reverse proxy configuration
-│   ├── nginx/                # Nginx configuration files
-│   │   ├── conf.d/           # Nginx configuration directory
-│   │   │   ├── servers/      # Server-specific configurations
-│   │   │   ├── common/       # Shared configuration snippets
-│   │   │   └── ssl/          # SSL configuration
-│   │   └── nginx.conf        # Main Nginx configuration
-│   ├── ssl/                  # SSL certificates storage
-│   └── docker-compose.yml    # Reverse proxy deployment
-├── jenkins/                   # CI/CD pipeline infrastructure
-│   ├── jenkins-agent/        # Custom Jenkins agent configuration
-│   └── docker-compose.yml    # Jenkins master and agent setup
-├── pritunl/                  # VPN server setup
-│   └── docker-compose.yml    # Pritunl VPN deployment
-├── pihole/                   # DNS filtering and DHCP
-│   ├── docker-compose.yml    # Pi-hole deployment
-│   └── example.env           # Environment configuration template
-├── jenkinsfiles/             # Jenkins pipeline definitions
-│   └── Jenkinsfile.ansible-playbooks # Ansible automation pipeline
-└── .github/                  # GitHub Actions workflows
-    ├── workflows/            # CI/CD workflow definitions
-    └── actions/              # Custom GitHub Actions
-```
+## Step-by-Step Setup Guide
 
-## Quick Start
+### 1. Prepare PXE Boot Configuration
 
-### Prerequisites
+Create a PXE boot directory with configuration files and environment variables:
 
-- Docker and Docker Compose installed on target hosts
-- Ansible installed on control machine
-- SSH access to target infrastructure
-- Domain name with DNS configured (stanodn.org in configurations)
-
-### Initial Setup
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd stanodn-infra
-   ```
-
-2. **Configure Ansible inventory**:
-   ```bash
-   # Copy and configure static inventory
-   cp ansible/inventory/static.yml.example ansible/inventory/static.yml
-   # Edit with your actual host information
-   
-   # Configure Proxmox dynamic inventory (if using Proxmox)
-   cp ansible/inventory/proxmox.yml.example ansible/inventory/proxmox.yml
-   # Add your Proxmox credentials
-   ```
-
-3. **Set up user configuration**:
-   ```bash
-   cp ansible/group_vars/users.yml.example ansible/group_vars/users.yml
-   # Configure users, SSH keys, and access
-   
-   cp ansible/group_vars/cloud-init.yml.example ansible/group_vars/cloud-init.yml
-   # Configure cloud-init settings for VMs
-   ```
-
-4. **Create Ansible vault password file**:
-   ```bash
-   echo "your-vault-password" > ansible/.vault_pass
-   chmod 600 ansible/.vault_pass
-   ```
-
-## Component Details
-
-### Reverse Proxy (Nginx)
-
-The reverse proxy provides:
-- **SSL Termination**: Automatic HTTPS with security headers
-- **Load Balancing**: Route traffic to backend services
-- **Security**: Headers and access control
-- **Monitoring**: Access and error logging
-
-**Configured Services**:
-- `jenkins.stanodn.org` → Jenkins CI/CD (port 8080)
-- `grafana.stanodn.org` → Grafana dashboards (port 3000)
-- `prometheus.stanodn.org` → Prometheus metrics (port 9090)
-- `pritunl.stanodn.org` → VPN management (port 8443)
-- `pihole.stanodn.org` → DNS admin interface
-- `proxmox.stanodn.org` → Proxmox VE web interface
-- `disk.stanodn.org` → File management interface
-
-**Deployment**:
 ```bash
-cd reverse-proxy
-docker-compose up -d
+# Create PXE boot directory structure
+mkdir -p pxe-boot/{config,.env}
+# Add your PXE configuration files here
 ```
 
-### VPN Access (Pritunl)
+### 2. Provision Proxmox Machine
 
-Pritunl provides secure VPN access with:
-- **Multi-protocol Support**: OpenVPN and WireGuard
-- **User Management**: Web-based user and organization management
-- **High Availability**: MongoDB backend support
-- **Network Routing**: Site-to-site and client-to-site VPN
+1. **Install Proxmox VE** on your physical machine
+2. **Configure storage** - Set up your disk layout (e.g., `disk1tb-01`)
+3. **Configure networking** - Set up `vmbr0` bridge
+4. **Note the Proxmox IP** - You'll need this for Terraform configuration
 
-**Configuration**:
-- Web interface: `https://pritunl.stanodn.org`
-- VPN ports: 1194 (OpenVPN), 15343 (management)
-- Admin interface: Port 8443 (HTTPS), 8080 (HTTP)
+### 3. Create VM Templates with Ansible
 
-**Deployment**:
 ```bash
-cd pritunl
-docker-compose up -d
+cd ansible
+# Create Ubuntu template (ID 110) with cloud-init
+ansible-playbook playbooks/proxmox/create-templates.yml
 ```
 
-### DNS & Ad-Blocking (Pi-hole)
+### 4. Create Terraform API Token (Manual)
 
-Pi-hole provides network-wide ad blocking and DNS management:
-- **DNS Filtering**: Block ads, trackers, and malicious domains
-- **DHCP Server**: Network IP address management
-- **Query Logging**: DNS request monitoring and statistics
-- **Custom DNS**: Local domain resolution
+1. **Login to Proxmox Web UI**
+2. **Go to Datacenter → Permissions → API Tokens**
+3. **Create new token**:
+   - User: `terraform@pam`
+   - Token ID: `terraform`
+   - Privilege Separation: `Yes`
+   - **Save the token secret** - you'll need it for Terraform
 
-**Features**:
-- Web admin interface for management
-- Custom DNS upstream servers (8.8.8.8, 8.8.4.4)
-- DHCP range: 192.168.0.1-250
-- Network interface monitoring
+### 5. Configure Terraform
 
-**Configuration**:
 ```bash
-cd pihole
-cp example.env .env
-# Edit .env with your network settings
-docker-compose up -d
+cd terraform/proxmox/pve01
+# Copy example configuration
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your actual values:
+# - proxmox_api_url
+# - proxmox_api_token_secret
+# - vm_template_id
+# - vm_storage
+# - ssh_public_keys
 ```
 
-### CI/CD Pipeline (Jenkins)
+### 6. Provision VMs with Terraform
 
-Jenkins provides automated deployment and infrastructure management:
-- **Master-Agent Architecture**: Scalable build execution
-- **Ansible Integration**: Infrastructure automation workflows
-- **Pipeline Management**: Parameterized job execution
-- **Security**: Credential management and access control
-
-**Key Features**:
-- **Ansible Playbook Pipeline**: Dynamic inventory discovery and execution
-- **Docker Integration**: Containerized build environments
-- **Parameterized Builds**: Flexible job configuration
-- **Monitoring**: Build history and status tracking
-
-**Jenkinsfile Pipeline Features**:
-- Dynamic playbook and inventory discovery
-- Dry-run (check mode) support
-- Tag-based task execution
-- Custom variable injection
-- Vault-encrypted credential management
-
-**Deployment**:
 ```bash
-cd jenkins
-docker-compose up -d
+cd terraform/proxmox/pve01
+terraform init
+terraform plan
+terraform apply
 ```
 
-### Monitoring Stack (Prometheus + Grafana)
+This will create all 4 VMs with the specified resources:
+- Total: 8 CPU cores, 30.7GB RAM allocated
 
-Comprehensive observability solution:
+### 7. Setup GitLab Runner (Manual)
 
-**Prometheus**:
-- **Metrics Collection**: Time-series data storage
-- **Service Discovery**: Automatic target discovery
-- **Alerting**: Rule-based alerting system
-- **Data Retention**: 7-day default retention
+On `stan-runner01`:
 
-**Grafana**:
-- **Visualization**: Interactive dashboards
-- **Data Sources**: Prometheus integration
-- **User Management**: Role-based access
-- **Alerting**: Visual alert management
-
-**Configuration**:
-- Prometheus: `http://prometheus:9090`
-- Grafana: `http://grafana:3000` (admin/admin default)
-- Custom exporter: `monad-exporter:8000`
-
-**Deployment**:
 ```bash
-cd docker-apps/monitoring
-docker-compose up -d
+# Download and configure GitLab runner
+curl -LJO "https://gitlab-runner-downloads.s3.amazonaws.com/latest/deb/gitlab-runner_amd64.deb"
+sudo dpkg -i gitlab-runner_amd64.deb
+sudo gitlab-runner register
+
+# Create systemd service
+sudo tee /etc/systemd/system/gitlab-runner.service << EOF
+[Unit]
+Description=GitLab Runner
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/actions-runner
+ExecStart=/home/ubuntu/actions-runner/run.sh
+KillMode=control-group
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable gitlab-runner
+sudo systemctl start gitlab-runner
 ```
 
-### Infrastructure Automation (Ansible)
+### 8. Configure DNS Server
 
-Comprehensive automation framework:
+On `stan-ns01`:
 
-**Playbooks**:
-- **`ping.yml`**: Infrastructure connectivity testing
-- **`docker-install.yml`**: Automated Docker installation
-- **`docker-deploy.yml`**: Application deployment automation
-- **`server_sync_users.yml`**: User account synchronization
+1. **Install Docker Compose**:
+```bash
+sudo apt update
+sudo apt install docker-compose
+sudo adduser ubuntu docker
+```
 
-**Roles**:
-- **`configure/docker`**: Docker and Docker Compose installation
-- **`configure/docker-deploy`**: Application deployment with backup
-- **`configure/sync_users`**: User management and SSH key deployment
-- **`provision/proxmox`**: VM and template provisioning
+2. **Generate environment variables**:
+```bash
+# Use this vim command to generate random strings
+:r !bash -lc 'randhex(){ n=$1; openssl rand -hex $(( (n+1)/2 )) | cut -c1-"$n"; }; printf "%s-%s-%s\n" "$(randhex 5)" "$(randhex 7)" "$(randhex 5)"'
+```
 
-**Inventory Management**:
-- **Static Inventory**: Physical hosts and infrastructure
-- **Dynamic Inventory**: Proxmox VE integration
-- **Group Variables**: Environment-specific configuration
-- **Vault Integration**: Encrypted credential storage
+3. **Create .env file** with the generated values
 
-### Proxmox Integration
+### 9. Disable Previous DHCP
 
-Virtual machine and container management:
-- **Dynamic Inventory**: Automatic VM discovery
-- **Template Management**: Standardized VM deployment
-- **Cloud-init Integration**: Automated VM configuration
-- **Cluster Management**: Multi-node Proxmox support
+1. **Stop and disable systemd-resolved**:
+```bash
+sudo systemctl stop systemd-resolved
+sudo systemctl disable systemd-resolved
+```
 
-## Security Features
+2. **Edit resolved.conf**:
+```bash
+sudo nano /etc/systemd/resolved.conf
+# Add: DNSStubListener=no
+```
 
-### SSL/TLS Configuration
-- **Modern Protocols**: TLS 1.2 and 1.3 only
-- **Strong Ciphers**: High-security cipher suites
-- **HSTS**: HTTP Strict Transport Security
-- **OCSP Stapling**: Certificate validation optimization
+### 10. Configure Static IP
 
-### Security Headers
-- **X-Frame-Options**: Clickjacking protection
-- **X-XSS-Protection**: Cross-site scripting prevention
-- **Content-Security-Policy**: Resource loading restrictions
-- **X-Content-Type-Options**: MIME type validation
+On `stan-ns01`, set static IP to `192.168.1.55/24`:
 
-### Access Control
-- **SSH Key Authentication**: Public key-based access
-- **Ansible Vault**: Encrypted credential storage
-- **Network Segmentation**: Service isolation
-- **Firewall Integration**: Traffic filtering support
+```bash
+sudo nano /etc/netplan/01-netcfg.yaml
+# Configure static IP with gateway 192.168.1.1
+sudo netplan apply
+```
 
-## Automation Workflows
+### 11. Update DNS Configuration
 
-### GitHub Actions
+1. **Update Terraform DNS servers** in `terraform.tfvars`:
+```hcl
+dns_servers = ["192.168.1.55", "1.1.1.1"]
+```
 
-Automated deployment workflows for each service:
-- **deploy-jenkins.yml**: Jenkins service deployment
-- **deploy-pihole.yml**: Pi-hole service deployment
-- **deploy-pritunl.yml**: Pritunl VPN deployment
-- **deploy-reverse-proxy.yml**: Nginx reverse proxy deployment
+2. **Update GitLab/GitHub settings** to use `192.168.1.55` as DNS
 
-**Workflow Features**:
-- **Path-based Triggers**: Deploy only when service files change
-- **SSH Deployment**: Secure remote deployment
-- **Service Validation**: Health check verification
-- **Manual Triggers**: On-demand deployment support
+### 12. Restart All Hosts
 
-### Jenkins Pipelines
+```bash
+# Restart all VMs to apply new DNS settings
+cd terraform/proxmox/pve01
+terraform apply -replace="proxmox_virtual_environment_vm.ubuntu_vms"
+```
 
-**Ansible Playbook Pipeline**:
-- **Dynamic Discovery**: Automatic playbook and inventory detection
-- **Parameter Validation**: Input validation and syntax checking
-- **Execution Options**: Dry-run, tagging, and custom variables
-- **Result Reporting**: Detailed execution summaries
+### 13. Propagate SSH Keys
 
-**Pipeline Parameters**:
-- **PLAYBOOK**: Dynamic list of available playbooks
-- **TARGET**: Auto-discovered hosts and groups
-- **DRY_RUN**: Check mode execution
-- **TAGS**: Selective task execution
-- **EXTRA_VARS**: Custom variable injection
+Ensure the runner's SSH key is available on all hosts for Ansible automation:
 
-## Monitoring and Observability
+```bash
+# Copy runner's public key to all hosts
+ssh-copy-id ubuntu@stan-ns01
+ssh-copy-id ubuntu@stan-gw01
+ssh-copy-id ubuntu@stan-acn01
+```
 
-### Metrics Collection
-- **System Metrics**: CPU, memory, disk, network
-- **Application Metrics**: Service-specific monitoring
-- **Custom Exporters**: Specialized metric collection
-- **Alert Rules**: Automated issue detection
+## Ansible Automation (Future TODOs)
 
-### Dashboard Features
-- **Real-time Monitoring**: Live system status
-- **Historical Analysis**: Trend identification
-- **Alert Visualization**: Issue tracking and resolution
-- **Custom Queries**: Flexible data exploration
+The following steps are currently manual but can be automated with Ansible roles:
 
-### Log Management
-- **Centralized Logging**: Service log aggregation
-- **Access Logs**: HTTP request monitoring
-- **Error Tracking**: Issue identification and debugging
-- **Retention Policies**: Storage optimization
+- [ ] **Terraform token creation** - Ansible role for API token management
+- [ ] **GitLab runner setup** - Automated runner installation and configuration
+- [ ] **DNS/DHCP server configuration** - Automated server setup
+- [ ] **Docker Compose installation** - Automated Docker setup
+- [ ] **Static IP configuration** - Automated network configuration
 
-## Maintenance and Operations
+## Network Configuration
 
-### Backup Procedures
-- **Configuration Backup**: Automated config preservation
-- **Data Backup**: Service data protection
-- **Rollback Support**: Quick service restoration
-- **Version Control**: Change tracking and history
+| VM | IP Address | Purpose |
+|---|---|---|
+| `stan-runner01` | DHCP | GitLab/Jenkins Runner |
+| `stan-ns01` | 192.168.1.55/24 | DNS/DHCP Server |
+| `stan-gw01` | 192.168.1.60/24 | NGINX Gateway |
+| `stan-acn01` | DHCP | Jenkins/Ansible Control |
 
-### Update Management
-- **Service Updates**: Container image updates
-- **Security Patches**: OS and application patching
-- **Configuration Changes**: Version-controlled updates
-- **Rollback Procedures**: Safe change reversal
+## Resource Allocation
 
-### Health Monitoring
-- **Service Health**: Container status monitoring
-- **Resource Usage**: Performance tracking
-- **Connectivity Tests**: Network validation
-- **Automated Alerts**: Issue notification
+| VM | CPU | RAM | Disk | Purpose |
+|---|---|---|---|---|
+| `stan-runner01` | 2 cores | 6GB | 120GB | CI/CD Runner |
+| `stan-ns01` | 1 core | 4GB | 100GB | DNS/DHCP |
+| `stan-gw01` | 1 core | 4GB | 100GB | NGINX Gateway |
+| `stan-acn01` | 4 cores | 16GB | 200GB | Jenkins/Ansible |
+| **Total** | **8 cores** | **30GB** | **520GB** | **Full Lab** |
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Ansible Connection Problems**:
+1. **Terraform connection errors**: Check Proxmox API URL and token
+2. **VM boot issues**: Verify cloud-init configuration and SSH keys
+3. **Network connectivity**: Ensure DNS server is properly configured
+4. **Ansible connection**: Verify SSH key propagation and user permissions
+
+### Useful Commands
+
 ```bash
-# Test connectivity
+# Check VM status in Proxmox
+qm list
+
+# View Terraform state
+terraform show
+
+# Test Ansible connectivity
 ansible all -m ping
 
-# Check inventory
-ansible-inventory --list
-
-# Validate playbook syntax
-ansible-playbook --syntax-check playbooks/general/ping.yml
+# Check DNS resolution
+nslookup google.com 192.168.1.55
 ```
 
-**Docker Service Issues**:
-```bash
-# Check service status
-docker-compose ps
+## Maintenance
 
-# View service logs
-docker-compose logs -f [service-name]
-
-# Restart services
-docker-compose restart [service-name]
-```
-
-**SSL Certificate Issues**:
-```bash
-# Check certificate validity
-openssl x509 -in ssl/origin.pem -text -noout
-
-# Verify certificate chain
-openssl verify -CAfile ca-bundle.pem ssl/origin.pem
-```
-
-### Log Locations
-- **Nginx Logs**: `/var/log/nginx/`
-- **Container Logs**: `docker-compose logs`
-- **Ansible Logs**: Jenkins build console
-- **System Logs**: `/var/log/syslog`
-
-## Deployment Strategies
-
-### Development Environment
-1. Use local containers for testing
-2. Validate playbooks with check mode
-3. Test SSL with self-signed certificates
-4. Monitor resource usage
-
-### Production Deployment
-1. Deploy monitoring stack first
-2. Configure SSL certificates
-3. Deploy core services (DNS, VPN)
-4. Configure reverse proxy
-5. Deploy CI/CD pipeline
-6. Set up automated backups
-
-### Scaling Considerations
-- **Horizontal Scaling**: Add more nodes to cluster
-- **Load Distribution**: Balance services across hosts
-- **Resource Allocation**: Monitor and adjust limits
-- **Network Optimization**: Optimize traffic routing
-
-## Additional Resources
-
-### Documentation
-- [Ansible Documentation](https://docs.ansible.com/)
-- [Docker Compose Reference](https://docs.docker.com/compose/)
-- [Nginx Configuration Guide](https://nginx.org/en/docs/)
-- [Prometheus Configuration](https://prometheus.io/docs/)
-
-### Community
-- Submit issues and feature requests
-- Contribute improvements and fixes
-- Share deployment experiences
-- Participate in discussions
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- **Regular backups**: Backup Terraform state and VM configurations
+- **Updates**: Keep Proxmox, Terraform, and Ansible updated
+- **Monitoring**: Monitor resource usage and VM performance
+- **Security**: Regularly rotate SSH keys and API tokens
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make changes and test thoroughly
-4. Submit a pull request with detailed description
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
----
+## License
 
-**Maintained by**: Stanislav Odnorog
-**Last Updated**: 06.2024  
+This project is licensed under the MIT License - see the LICENSE file for details. 

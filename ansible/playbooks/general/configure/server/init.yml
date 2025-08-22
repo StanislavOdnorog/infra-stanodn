@@ -1,0 +1,9 @@
+---
+- name: Prepare server
+  hosts: '{{ target }}'
+  become: true
+  gather_facts: true
+  roles:
+    - configure/users/sync
+    - configure/users/prepare
+    - configure/server/prepare

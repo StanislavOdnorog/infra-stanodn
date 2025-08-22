@@ -1,0 +1,8 @@
+---
+- name: Set up authorized_keys for user {{ user.name }}
+  ansible.builtin.template:
+    src: authorized_keys.j2
+    dest: "/home/{{ user.name }}/.ssh/authorized_keys"
+    owner: "{{ user.name }}"
+    group: "{{ user.name }}"
+    mode: '0644'

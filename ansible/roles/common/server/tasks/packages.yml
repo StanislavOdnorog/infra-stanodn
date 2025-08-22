@@ -1,0 +1,41 @@
+---
+- name: Initialize lists for packages
+  set_fact:
+    packages:
+      default:
+        present: "{{ packages.default.present | default([]) }}"
+        absent: "{{ packages.default.absent | default([]) }}"
+      custom:
+        present: "{{ packages.custom.present | default([]) }}"
+        absent: "{{ packages.custom.absent | default([]) }}"
+
+- name: Update package list
+  package:
+    update_cache: yes
+  changed_when: false
+
+- name: Upgrade packages
+  package:
+    upgrade: dist
+
+- name: "Install default packages: {{ packages.default.present | join(', ') }}"
+  package:
+    name: "{{ packages.default.present }}"
+    state: present
+
+- name: "Remove default packages: {{ packages.default.absent | join(', ') }}"
+  package:
+    name: "{{ packages.default.absent }}"
+    state: absent
+
+- name: Install custom package {{ package }}
+  ansible.builtin.include_tasks: "custom-packages/{{ item }}-install.yml"
+  loop: "{{ packages.custom.present }}"
+  loop_control:
+    loop_var: package
+
+- name: Remove custom package {{ package }}
+  ansible.builtin.include_tasks: "custom-packages/{{ item }}-remove.yml"
+  loop: "{{ packages.custom.absent }}"
+  loop_control:
+    loop_var: package

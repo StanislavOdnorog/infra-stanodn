@@ -1,0 +1,8 @@
+---
+- name: Set up .bashrc 
+  ansible.builtin.template:
+    src: bashrc.j2
+    dest: "/home/{{ user.name }}/.bashrc"
+    owner: "{{ user.name }}"
+    group: "{{ user.name }}"
+    mode: '0644'

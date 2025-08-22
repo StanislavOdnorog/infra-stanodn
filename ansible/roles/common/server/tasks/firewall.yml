@@ -1,0 +1,63 @@
+---
+# ufw:
+#   state: enabled
+#   default_policy: deny
+#   rules:
+#     - name: Allow SSH
+#       port: 22
+#       proto: tcp
+#       action: allow
+#     - name: Allow DNS
+#       port: 53
+#       proto: udp
+#       action: allow
+#     - name: Allow DNS
+#       port: 53
+#       proto: tcp
+#       action: allow
+#     - name: Allow DHCP
+#       port: 67
+#       proto: udp
+#       action: allow
+#     - name: Allow DHCP
+#       port: 68
+#       proto: udp
+#       action: allow
+#   rules_2disable:
+
+- name: Init list of rules
+  set_fact:
+    ufw:
+      rules: "{{ ufw.rules | default([]) }}"
+      rules_2disable: "{{ ufw.rules_2disable | default([]) }}"
+      default_policy: "{{ ufw.default_policy | default('deny') }}"
+      enabled: "{{ ufw.enabled | default('enabled') }}"
+
+- name: Install UFW
+  package:
+    name: ufw
+    state: present
+
+- name: Configure UFW from vars
+  ufw:
+    proto: "{{ rule.proto }}"
+    port: "{{ rule.port }}"
+    rule: "{{ rule.action }}"
+  loop: "{{ ufw.rules }}"
+  loop_control:
+    loop_var: rule
+
+- name: Configure UFW from vars to disable
+  ufw:
+    proto: "{{ rule.proto }}"
+    port: "{{ rule.port }}"
+    rule: "{{ rule.action }}"
+    delete: true
+  loop: "{{ ufw.rules_2disable }}"
+  loop_control:
+    loop_var: rule
+
+- name: Set default settings
+  ufw:
+    state: "{{ ufw.enabled }}"
+    policy: "{{ ufw.default_policy }}"

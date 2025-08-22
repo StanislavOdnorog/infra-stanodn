@@ -1,0 +1,16 @@
+---
+- name: Ensure absent users are absent
+  ansible.builtin.user:
+    name: "{{ user.name }}"
+    state: absent
+    remove: yes
+
+- name: Ensure absent groups are absent
+  ansible.builtin.group:
+    name: "{{ user.name }}"
+    state: absent
+
+- name: Ensure sudoers.d files for absent users are removed
+  ansible.builtin.file:
+    path: /etc/sudoers.d/{{ user.name }}
+    state: absent

@@ -1,0 +1,16 @@
+---
+- name: Ensure group {{ user.name }} exists
+  group:
+    name: "{{ user.name }}"
+    state: present
+
+- name: Create user {{ user.name }} and group
+  user:
+    name: "{{ user.name }}"
+    state: present
+    password: "*"
+    create_home: true
+    shell: /bin/bash
+    group: "{{ user.name }}"
+    groups: sudo
+    append: true

@@ -1,0 +1,16 @@
+ufw:
+  state: enabled
+  default_policy: deny
+  rules:
+    - name: Allow SSH
+      port: 22
+      proto: tcp
+      action: allow
+    - name: Allow Jenkins
+      port: 8080
+      proto: tcp
+      action: allow
+    - name: Allow Jenkins Agent
+      port: 50000
+      proto: tcp
+      action: allow

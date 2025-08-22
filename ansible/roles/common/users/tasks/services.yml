@@ -1,0 +1,7 @@
+---
+- name: Create symbolic link to /etc/systemd/system
+  become: true
+  file:
+    src: /etc/systemd/system
+    dest: "/home/{{ user.name }}/services"
+    state: link

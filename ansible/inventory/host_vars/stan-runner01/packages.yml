@@ -1,0 +1,25 @@
+# host_vars/stan-runner01/packages.yml
+---
+packages:
+  default:
+    present:
+      - vim
+      - make
+      - build-essential
+      - gcc
+      - git
+      - jq
+      - chrony
+      - lz4
+      - tmux
+      - tree
+      - bc
+      - acl
+      - libssl-dev
+      - docker-compose
+    absent:
+  #custom:
+  #  present:
+  #    - docker
+  #  absent:
+  #    - old_software

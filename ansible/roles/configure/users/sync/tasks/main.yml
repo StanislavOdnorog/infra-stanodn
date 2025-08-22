@@ -1,0 +1,42 @@
+---
+#present_users:
+#  - name: user_to_add
+#    shell: /bin/bash
+#    ssh_keys:
+#      - "ssh-rsa AAAAB3NrmhcxxAAXXXXAaXXX= xxx@xx.xx"
+#    aliases:
+#      - ll='ls -alF --color=auto'
+#      - gs='git status'
+#  - name: user_to_add_2
+#    shell: /bin/bash
+#    ssh_keys:
+#      - "ssh-rsa AAAAB3NrmhcxxAAXXXXAaXXX= xxx@xx.xx"
+#      - "ssh-rsa AAAAB3NrmhcxxAAXXXXAaXXX= xxx@xx.xx"
+#absent_users:
+#  - name: user_to_remove
+#  - name: user_to_remove_2
+
+- name: Set users present_users and absent_users
+  set_fact:
+    present_users: "{{ present_users | default([]) }}"
+    absent_users: "{{ absent_users | default([]) }}"
+
+- name: Include tasks for present users
+  ansible.builtin.include_role:
+    name: "common/users"
+    tasks_from: "{{ item[1] }}.yml"
+  loop: "{{ present_users | product(tasks_to_include) | list }}"
+  vars:
+    user: "{{ item[0] }}"
+    tasks_to_include:
+      - create
+
+- name: Include tasks for absent users
+  ansible.builtin.include_role:
+    name: "common/users"
+    tasks_from: "{{ item[1] }}.yml"
+  loop: "{{ absent_users | product(tasks_to_include) | list }}"
+  vars:
+    user: "{{ item[0] }}"
+    tasks_to_include:
+      - remove

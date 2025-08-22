@@ -1,0 +1,67 @@
+---
+- name: Install UFW
+  package:
+    name: ufw
+    state: present
+
+- name: Install fail2ban
+  package:
+    name: fail2ban
+    state: present
+
+- name: Allow SSH from all
+  ufw:
+    rule: allow
+    from_ip: 0.0.0.0/0
+    proto: tcp
+    port: 22
+
+- name: Block outgoing traffic to private networks with UFW
+  ufw:
+    rule: deny
+    direction: out
+    to_ip: "{{ item }}"
+  loop:
+    - 0.0.0.0/8
+    - 10.0.0.0/8
+    - 100.64.0.0/10
+    - 169.254.0.0/16
+    - 192.0.0.0/24
+    - 192.0.2.0/24
+    - 192.88.99.0/24
+    - 198.18.0.0/15
+    - 198.51.100.0/24
+    - 203.0.113.0/24
+    - 224.0.0.0/4
+    - 240.0.0.0/4
+
+- name: Add Docker outbound rules to UFW
+  ufw:
+    rule: deny
+    direction: out
+    interface: "docker0"
+    to_ip: "{{ item }}"
+  loop:
+    - 10.0.0.0/8
+    - 100.64.0.0/10
+    - 198.18.0.0/15
+    - 169.254.0.0/16
+  when: docker | default(false) | bool
+
+- name: Update SSH config. Disable root login, password auth and enable key auth
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '{{ item.regexp }}'
+    line: '{{ item.line }}'
+    backup: yes
+  loop:
+    - { regexp: '^#?PermitRootLogin\s+', line: 'PermitRootLogin no' }
+    - { regexp: '^#?PasswordAuthentication\s+', line: 'PasswordAuthentication no' }
+    - { regexp: '^#?PubkeyAuthentication\s+', line: 'PubkeyAuthentication yes' }
+
+- name: Restart SSH
+  service:
+    name: ssh
+    state: restarted
+  changed_when: false

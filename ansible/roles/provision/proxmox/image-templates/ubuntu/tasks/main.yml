@@ -1,17 +1,8 @@
 ---
-- name: Check if template already exists
-  shell: |
-    cat /etc/pve/.vmlist | \
-    grep -e "^\"{{ vm_template_id }}\""
-  register: template_check
-  failed_when: false
-  changed_when: false
-  become: yes
-
 - name: Create template if is_present is true
   include_tasks: create-template.yml
-  when: is_present and template_check.rc != 0
+  when: is_present | bool
 
 - name: Delete template if is_present is false
   include_tasks: delete-template.yml
-  when: not is_present and template_check.rc == 0
+  when: not (is_present | bool)

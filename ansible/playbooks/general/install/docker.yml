@@ -1,0 +1,26 @@
+---
+- name: Install Docker and Docker Compose
+  hosts: "{{ target }}"
+  become: yes
+  
+  tasks:
+    - name: Install Docker
+      include_role:
+        name: configure/docker
+
+  post_tasks:
+    - name: Verify Docker installation
+      command: docker --version
+      register: docker_version
+      
+    - name: Verify Docker Compose installation
+      command: docker-compose --version
+      register: docker_compose_version
+      
+    - name: Display installation results
+      debug:
+        msg:
+          - "🐳 Docker Installation Complete!"
+          - "Docker: {{ docker_version.stdout }}"
+          - "Docker Compose: {{ docker_compose_version.stdout }}"
+          - "Docker service status: {{ ansible_facts.services['docker'].state | default('unknown') }}" 

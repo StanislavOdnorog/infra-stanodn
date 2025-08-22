@@ -1,0 +1,17 @@
+---
+packages:
+  present:
+    - make
+    - build-essential
+    - gcc
+    - git
+    - jq
+    - chrony
+    - lz4
+    - tmux
+    - tree
+    - bc
+    - acl
+    - libssl-dev
+  absent:
+    - old_software

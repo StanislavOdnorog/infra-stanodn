@@ -1,0 +1,4 @@
+# Cloud-init configuration
+cloud_init_user: "user_to_add"
+cloud_init_ssh_keys:
+    - "ssh-rsa AAAAB3NrmhcxxAAXXXXAaXXX= xxx@xx.xx"

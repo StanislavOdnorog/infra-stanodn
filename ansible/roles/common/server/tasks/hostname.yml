@@ -1,0 +1,17 @@
+---
+- name: Set the hostname
+  hostname:
+    name: "{{ hostname | default(inventory_hostname) }}"
+
+- name: Update /etc/hosts with the new hostname
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s+'
+    line: "127.0.1.1 {{ hostname }}"
+    state: present
+
+- name: Ensure the hostname is set permanently
+  lineinfile:
+    path: /etc/hostname
+    line: "{{ hostname }}"
+    state: present

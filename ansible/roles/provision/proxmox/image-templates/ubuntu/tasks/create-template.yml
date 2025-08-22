@@ -55,7 +55,7 @@
   command: qm importdisk {{ vm_template_id }} /tmp/{{ image_name }} {{ storage_name }}
 
 - name: Set VM SCSI hardware and disk
-  command: qm set {{ vm_template_id }} --scsihw virtio-scsi-pci --scsi0 {{ storage_name }}:vm-{{ vm_template_id }}-disk-0
+  command: qm set {{ vm_template_id }} --scsihw virtio-scsi-pci --scsi0 {{ storage_name }}:{{ vm_template_id }}/vm-{{ vm_template_id }}-disk-0.raw
 
 - name: Set Cloud-Init drive
   command: qm set {{ vm_template_id }} --ide2 {{ storage_name }}:cloudinit
@@ -77,10 +77,10 @@
 
 - name: Create temporary SSH key file for cloud-init
   copy:
-    content: "{{ cloud_init_ssh_key }}"
+    content: "{{ cloud_init_ssh_keys | join('\n') }}"
     dest: "/tmp/ssh_key_{{ vm_template_id }}.pub"
     mode: '0644'
-  when: cloud_init_ssh_key is defined and cloud_init_ssh_key != ""
+  when: cloud_init_ssh_keys is defined and cloud_init_ssh_keys | length > 0
 
 - name: Configure Cloud-Init settings in template
   command: >
@@ -89,20 +89,16 @@
     --sshkeys /tmp/ssh_key_{{ vm_template_id }}.pub
     --nameserver "8.8.8.8 8.8.4.4"
     --ipconfig0 "ip=dhcp"
-  when: cloud_init_ssh_key is defined and cloud_init_ssh_key != ""
+  when: cloud_init_ssh_keys is defined and cloud_init_ssh_keys | length > 0
 
 - name: Remove temporary SSH key file
   file:
     path: "/tmp/ssh_key_{{ vm_template_id }}.pub"
     state: absent
-  when: cloud_init_ssh_key is defined and cloud_init_ssh_key != ""
+  when: cloud_init_ssh_keys is defined and cloud_init_ssh_keys | length > 0
 
 - name: Convert VM to template
   command: qm template {{ vm_template_id }}
 
 - name: Rename the template
   command: qm set {{ vm_template_id }} --name {{ template_name }}
-
-- name: Wait for 60 seconds before proceeding
-  pause:
-    seconds: 60 

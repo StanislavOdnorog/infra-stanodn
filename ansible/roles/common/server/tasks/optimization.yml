@@ -1,0 +1,49 @@
+---
+- name: Disable APT language index downloads
+  copy:
+    dest: /etc/apt/apt.conf.d/99no-l10n
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Acquire::Languages "none";
+
+- name: Configure journald size limit
+  lineinfile:
+    path: /etc/systemd/journald.conf
+    regexp: '^#?\s*SystemMaxUse='
+    line: "SystemMaxUse=200M"
+    create: false
+    backrefs: false
+
+- name: Restart journald
+  systemd:
+    name: systemd-journald
+    state: restarted
+    daemon_reload: true
+  changed_when: false
+
+- name: Turn off all active swap
+  command: swapoff -a
+  changed_when: false
+
+- name: Remove swap entries from /etc/fstab
+  replace:
+    path: /etc/fstab
+    regexp: '^\s*[^#].*\s+swap\s+.*$'
+    replace: '# \g<0>'
+
+- name: APT autoremove unused packages
+  apt:
+    autoremove: true
+  ignore_errors: true
+
+- name: APT autoclean to drop old cache entries
+  apt:
+    autoclean: true
+  ignore_errors: true
+
+- name: APT clean to free package cache
+  apt:
+    clean: true
+  ignore_errors: true
