@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  jenkins-agent:
+    build:
+      context: jenkins-agent
+    container_name: jenkins-agent
+    environment:
+      - JENKINS_URL=http://jenkins.stanodn.lab:8080
+      - JENKINS_AGENT_NAME=self-agent
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+      - JENKINS_SECRET=${JENKINS_SECRET:-""}
+    volumes:
+      - agent_workdir:/home/jenkins/agent
+    restart: always
+    
+volumes:
+  agent_workdir:

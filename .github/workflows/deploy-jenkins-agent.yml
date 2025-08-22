@@ -1,0 +1,26 @@
+name: Deploy Jenkins Agent
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'jenkins-agent/**'
+      - '.github/workflows/deploy-jenkins-agent.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy Jenkins Agent
+        uses: ./.github/actions/deploy-docker-compose
+        with:
+          server_host: ${{ secrets.JENKINS_AGENT_SERVER_HOST }}
+          server_username: ${{ secrets.JENKINS_AGENT_SERVER_USERNAME }}
+          server_port: ${{ secrets.JENKINS_AGENT_SERVER_PORT }}
+          server_ssh_key: ${{ secrets.HOMELAB_SSH_KEY }}
+          service_name: 'jenkins-agent'
+          source_path: 'jenkins-agent'
