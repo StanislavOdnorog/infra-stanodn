@@ -19,7 +19,6 @@ The infrastructure consists of:
 - Physical machine with at least 8 CPU cores and 32GB RAM
 - Ubuntu 22.04 LTS for the host system
 - Network access for downloading packages and templates
-- USB drive for PXE boot configuration
 
 ## Step-by-Step Setup Guide
 
@@ -256,5 +255,6 @@ nslookup google.com 192.168.1.55
 5. Submit a pull request
 
 ## License
+
 
 This project is licensed under the MIT License - see the LICENSE file for details. 
