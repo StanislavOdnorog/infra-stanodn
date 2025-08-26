@@ -7,7 +7,6 @@ proxmox_api_insecure     = true                    # Set to false if using valid
 proxmox_node             = "pve01"                   # Your Proxmox node name
 
 # VM Template and Storage Configuration
-vm_template_id_default  = 110
 vm_storage          = "disk1tb-01"                  # Storage location for VM disks
 vm_network_bridge   = "vmbr0"                     # Network bridge name
 

@@ -28,7 +28,7 @@ variable "proxmox_node" {
 variable "vm_template_id" {
   description = "VM template ID to clone from"
   type        = number
-  default     = var.vm_template_id_default
+  default     = 110
 }
 
 variable "vm_storage" {
