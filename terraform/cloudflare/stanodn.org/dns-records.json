@@ -1,5 +1,13 @@
 [
   {
+    "name": "test",
+    "type": "A",
+    "value": "77.37.156.63",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Test server"
+  },
+  {
     "name": "jenkins",
     "type": "A",
     "value": "77.37.156.63",
