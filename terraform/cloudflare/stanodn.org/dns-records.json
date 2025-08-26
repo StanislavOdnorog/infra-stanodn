@@ -8,6 +8,14 @@
     "comment": "Test server"
   },
   {
+    "name": "test2",
+    "type": "A",
+    "value": "77.37.156.63",
+    "proxied": false,
+    "ttl": 1,
+    "comment": "Test server 2"
+  },
+  {
     "name": "jenkins",
     "type": "A",
     "value": "77.37.156.63",
