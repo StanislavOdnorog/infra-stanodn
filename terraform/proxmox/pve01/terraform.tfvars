@@ -168,5 +168,34 @@ virtual_machines = {
       }
     }
   }
+
+  # N8N
+  "stan-n8n02" = {
+    vm_id       = 1005
+    name        = "stan-n8n02"
+    description = "N8N Automation Node - Self-hosted workflow automation tool"
+    tags        = ["terraform", "ubuntu", "automation", "n8n", "workflow", "stan"]
+    
+    cpu = {
+      cores   = 1
+      sockets = 1
+    }
+    
+    memory = {
+      dedicated = 1024
+    }
+    
+    disk = {
+      size = 50
+    }
+    
+    initialization = {
+      ip_config = {
+        ipv4 = {
+          address = "dhcp"
+        }
+      }
+    }
+  }
   
 }
