@@ -52,6 +52,15 @@ jobs:
       with:
         terraform_version: ${{ env.TF_VERSION }}
 
+    - name: Convert domain to secret name
+      id: secret-name
+      run: |
+        SECRET_NAME="CLOUDFLARE_ZONE_ID_${DOMAIN//./_}"
+        echo "secret_name=$SECRET_NAME" >> $GITHUB_OUTPUT
+        echo "Using secret: $SECRET_NAME"
+      env:
+        DOMAIN: ${{ matrix.domain }}
+
     - name: Terraform Format Check
       id: fmt
       run: terraform fmt -check
@@ -73,7 +82,7 @@ jobs:
       run: terraform plan -no-color
       working-directory: ${{ env.TF_WORKING_DIR }}
       env:
-        TF_VAR_cf_zone_id: ${{ secrets[format('CLOUDFLARE_ZONE_ID_{0}', replace(matrix.domain, '.', '_'))] }}
+        TF_VAR_cf_zone_id: ${{ secrets[steps.secret-name.outputs.secret_name] }}
         TF_VAR_cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
     - name: Update Pull Request
@@ -110,5 +119,5 @@ jobs:
       run: terraform apply -auto-approve
       working-directory: ${{ env.TF_WORKING_DIR }}
       env:
-        TF_VAR_cf_zone_id: ${{ secrets[format('CLOUDFLARE_ZONE_ID_{0}', replace(matrix.domain, '.', '_'))] }}
+        TF_VAR_cf_zone_id: ${{ secrets[steps.secret-name.outputs.secret_name] }}
         TF_VAR_cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
