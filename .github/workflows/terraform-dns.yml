@@ -40,7 +40,7 @@ jobs:
         domain: ${{ fromJson(needs.detect-domains.outputs.domains) }}
     
     env:
-      TF_VERSION: "1.5.0"
+      TF_VERSION: "1.7.0"
       TF_WORKING_DIR: "terraform/cloudflare/${{ matrix.domain }}"
     
     steps:
@@ -73,7 +73,7 @@ jobs:
       run: terraform plan -no-color
       working-directory: ${{ env.TF_WORKING_DIR }}
       env:
-        TF_VAR_cf_zone_id: ${{ secrets[format('CLOUDFLARE_ZONE_ID_{0}', matrix.domain)] }}
+        TF_VAR_cf_zone_id: ${{ secrets[format('CLOUDFLARE_ZONE_ID_{0}', replace(matrix.domain, '.', '_'))] }}
         TF_VAR_cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
     - name: Update Pull Request
@@ -110,5 +110,5 @@ jobs:
       run: terraform apply -auto-approve
       working-directory: ${{ env.TF_WORKING_DIR }}
       env:
-        TF_VAR_cf_zone_id: ${{ secrets[format('CLOUDFLARE_ZONE_ID_{0}', matrix.domain)] }}
+        TF_VAR_cf_zone_id: ${{ secrets[format('CLOUDFLARE_ZONE_ID_{0}', replace(matrix.domain, '.', '_'))] }}
         TF_VAR_cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
