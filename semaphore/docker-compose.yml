@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   mysql:
     restart: unless-stopped
@@ -7,12 +9,16 @@ services:
       - ./semaphore-mysql:/var/lib/mysql
     env_file:
       - ./.env
+    network_mode: host
+
   semaphore:
     restart: unless-stopped
-    ports:
-      - 3000:3000
     image: semaphoreui/semaphore:latest
+    volumes:
+      - .vault_pass:/etc/.vault_pass:ro
+      - .ssh-key:/etc/.ssh-key:ro
     env_file:
       - ./.env
     depends_on:
       - mysql
+    network_mode: host
