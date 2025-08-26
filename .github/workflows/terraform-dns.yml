@@ -11,9 +11,6 @@ on:
       - 'terraform/cloudflare/**'
   workflow_dispatch:
 
-env:
-  TF_VERSION: "1.5.0"
-
 jobs:
   detect-domains:
     name: "Detect Domains"
@@ -43,6 +40,7 @@ jobs:
         domain: ${{ fromJson(needs.detect-domains.outputs.domains) }}
     
     env:
+      TF_VERSION: "1.5.0"
       TF_WORKING_DIR: "terraform/cloudflare/${{ matrix.domain }}"
     
     steps:
@@ -83,6 +81,7 @@ jobs:
       if: github.event_name == 'pull_request'
       env:
         PLAN: "${{ steps.plan.outputs.stdout }}"
+        DOMAIN: ${{ matrix.domain }}
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
@@ -105,8 +104,6 @@ jobs:
             repo: context.repo.repo,
             body: output
           })
-      env:
-        DOMAIN: ${{ matrix.domain }}
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
