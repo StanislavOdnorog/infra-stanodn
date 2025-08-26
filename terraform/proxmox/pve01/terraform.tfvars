@@ -80,4 +80,92 @@ virtual_machines = {
         }
     }
   }
+
+  # Network Gateway VM
+  "stan-gw01" = {
+    vm_id       = 1005
+    name        = "stan-gw01"
+    description = "Network Gateway - NGINX reverse proxy"
+    tags        = ["terraform", "ubuntu", "gateway", "nginx", "stan"]
+    
+    cpu = {
+      cores   = 1
+      sockets = 1
+    }
+    
+    memory = {
+      dedicated = 4096
+    }
+    
+    disk = {
+      size = 100
+    }
+    
+    initialization = {
+              ip_config = {
+          ipv4 = {
+            address = "192.168.1.60/24"
+            gateway = "192.168.1.1"
+          }
+        }
+    }
+  }
+  
+  # Automation Control Node
+  "stan-acn01" = {
+    vm_id       = 1003
+    name        = "stan-acn01"
+    description = "Automation Control Node - Jenkins master, Ansible control plane"
+    tags        = ["terraform", "ubuntu", "automation", "jenkins", "ansible", "control-node", "stan"]
+    
+    cpu = {
+      cores   = 4
+      sockets = 1
+    }
+    
+    memory = {
+      dedicated = 16384
+    }
+    
+    disk = {
+      size = 200
+    }
+    
+    initialization = {
+      ip_config = {
+        ipv4 = {
+          address = "dhcp"
+        }
+      }
+    }
+  }
+
+  # N8N
+  "stan-n8n01" = {
+    vm_id       = 1004
+    name        = "stan-n8n01"
+    description = "N8N Automation Node - Self-hosted workflow automation tool"
+    tags        = ["terraform", "ubuntu", "automation", "n8n", "workflow", "stan"]
+    
+    cpu = {
+      cores   = 4
+      sockets = 1
+    }
+    
+    memory = {
+      dedicated = 16384
+    }
+    
+    disk = {
+      size = 200
+    }
+    
+    initialization = {
+      ip_config = {
+        ipv4 = {
+          address = "dhcp"
+        }
+      }
+    }
+  }
 }
