@@ -14,3 +14,7 @@ ufw:
       port: 50000
       proto: tcp
       action: allow
+    - name: Allow Semaphore
+      port: 3000
+      proto: tcp
+      action: allow

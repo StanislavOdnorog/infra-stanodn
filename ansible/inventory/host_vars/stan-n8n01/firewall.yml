@@ -1,0 +1,8 @@
+ufw:
+  state: enabled
+  default_policy: deny
+  rules:
+    - name: Allow SSH
+      port: 22
+      proto: tcp
+      action: allow
