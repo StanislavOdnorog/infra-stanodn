@@ -5,9 +5,11 @@ locals {
 
 # Create regular DNS records (A, CNAME, MX, TXT)
 resource "cloudflare_dns_record" "dns_records" {
-  for_each = { for idx, record in local.dns_records : "${record.name}-${record.type}" => record 
-               if record.type != "SRV" }
-  
+  for_each = {
+    for idx, record in local.dns_records : "${record.name}-${record.type}" => record
+    if record.type != "SRV"
+  }
+
   zone_id  = var.cf_zone_id
   name     = each.value.name
   type     = each.value.type
@@ -20,15 +22,17 @@ resource "cloudflare_dns_record" "dns_records" {
 
 # Create SRV records with data block
 resource "cloudflare_dns_record" "srv_records" {
-  for_each = { for idx, record in local.dns_records : "${record.name}-${record.type}" => record 
-               if record.type == "SRV" }
-  
+  for_each = {
+    for idx, record in local.dns_records : "${record.name}-${record.type}" => record
+    if record.type == "SRV"
+  }
+
   zone_id = var.cf_zone_id
   name    = each.value.name
   type    = "SRV"
   ttl     = 1
   comment = lookup(each.value, "comment", "Terraform managed")
-  
+
   data = {
     priority = tonumber(split(" ", each.value.value)[0])
     weight   = tonumber(split(" ", each.value.value)[1])
