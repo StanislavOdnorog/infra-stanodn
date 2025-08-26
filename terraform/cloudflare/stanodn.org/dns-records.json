@@ -1,0 +1,131 @@
+[
+  {
+    "name": "jenkins",
+    "type": "A",
+    "value": "77.37.156.63",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Jenkins server"
+  },
+  {
+    "name": "mail",
+    "type": "A",
+    "value": "91.132.132.208",
+    "proxied": false,
+    "comment": "Mail server"
+  },
+  {
+    "name": "pihole",
+    "type": "A",
+    "value": "77.37.156.63",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Pi-hole DNS server"
+  },
+  {
+    "name": "proxmox",
+    "type": "A",
+    "value": "77.37.156.63",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Proxmox server"
+  },
+  {
+    "name": "serv-ru",
+    "type": "A",
+    "value": "45.159.210.230",
+    "proxied": false,
+    "comment": "Russian server"
+  },
+  {
+    "name": "web",
+    "type": "A",
+    "value": "91.132.132.208",
+    "proxied": false,
+    "comment": "Web server"
+  },
+  {
+    "name": "autoconfig",
+    "type": "CNAME",
+    "value": "mail.stanodn.org",
+    "proxied": false,
+    "comment": "Mail autoconfig"
+  },
+  {
+    "name": "autodiscover",
+    "type": "CNAME",
+    "value": "mail.stanodn.org",
+    "proxied": false,
+    "comment": "Mail autodiscover"
+  },
+  {
+    "name": "em584305",
+    "type": "CNAME",
+    "value": "return.smtp2go.net",
+    "proxied": false,
+    "comment": "SMTP2GO return"
+  },
+  {
+    "name": "link",
+    "type": "CNAME",
+    "value": "track.smtp2go.net",
+    "proxied": false,
+    "comment": "SMTP2GO tracking"
+  },
+  {
+    "name": "s584305._domainkey",
+    "type": "CNAME",
+    "value": "dkim.smtp2go.net",
+    "proxied": false,
+    "comment": "SMTP2GO DKIM"
+  },
+  {
+    "name": "@",
+    "type": "MX",
+    "value": "mail.stanodn.org",
+    "priority": 10,
+    "comment": "Primary mail exchanger"
+  },
+  {
+    "name": "_autodiscover._tcp",
+    "type": "SRV",
+    "value": "10 1 443 mail.stanodn.org",
+    "comment": "Mail autodiscover SRV"
+  },
+  {
+    "name": "_imaps._tcp",
+    "type": "SRV",
+    "value": "10 1 993 mail.stanodn.org",
+    "comment": "IMAPS SRV"
+  },
+  {
+    "name": "_pop3s._tcp",
+    "type": "SRV",
+    "value": "10 1 995 mail.stanodn.org",
+    "comment": "POP3S SRV"
+  },
+  {
+    "name": "_submissions._tcp",
+    "type": "SRV",
+    "value": "10 1 465 mail.stanodn.org",
+    "comment": "SMTP submissions SRV"
+  },
+  {
+    "name": "dkim._domainkey",
+    "type": "TXT",
+    "value": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtZa6Aj1GKVQOFkfa9reK1hUwT+aBcHBdx3hNRt07wYoHH/LxxZN6UjLto/R9n1v6/p1cQi2I0wV7ZmjxYUiM7ej9zczIcmyqhoWVuX0vXDQfvcQsB6C336Nssa0Ugs/m4zGQWtAPTL/MBV9FcNTlOJT5VM+6BCZvU3Ogmc8cwS1FdquSdTELVoogDyYfHioLdTo36FLIfCBTkJo+3P0/HahhcwxetWhOlEG2tVKGvJ6E9VI1S433W2CV5zukmqW4Jb5/WD/2q3668u61Y8Y03URQE+e9DJXpiMkHrpNY1OkHRGwoTqYX1jDyrIe7MvJ9hJkMlSss9IUV3YmSQ6Fi3wIDAQAB",
+    "comment": "DKIM record"
+  },
+  {
+    "name": "_dmarc",
+    "type": "TXT",
+    "value": "v=DMARC1; p=reject; rua=mailto:admin@stanodn.org; ruf=mailto:admin@stanodn.org; adkim=s; aspf=s",
+    "comment": "DMARC record"
+  },
+  {
+    "name": "@",
+    "type": "TXT",
+    "value": "v=spf1 mx a:mail.stanodn.org include:spf.smtp2go.com ~all",
+    "comment": "SPF record"
+  }
+]
