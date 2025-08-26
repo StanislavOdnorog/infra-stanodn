@@ -1,27 +1,27 @@
-name: Deploy Pi-hole
+name: Deploy Pi-Hole
 
 on:
   push:
     branches: [ main ]
     paths:
       - 'pihole/**'
-      - '.github/workflows/deploy-pihole.yml'
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: self-hosted
+    env:
+      SERVICE_NAME: 'pihole'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy Pi-hole
+      - name: Deploy
         uses: ./.github/actions/deploy-docker-compose
         with:
-          server_host: ${{ secrets.PIHOLE_SERVER_HOST }}
-          server_username: ${{ secrets.PIHOLE_SERVER_USERNAME }}
-          server_port: ${{ secrets.PIHOLE_SERVER_PORT }}
-          server_ssh_key: ${{ secrets.PIHOLE_SERVER_SSH_KEY }}
-          service_name: 'pihole'
-
-          source_path: 'pihole' 
+          server_host: ${{ env.SERVICE_NAME }}
+          service_name: ${{ env.SERVICE_NAME }}
+          source_path: ${{ env.SERVICE_NAME }}
+          server_username: ${{ secrets.DEFAULT_SSH_USER }}
+          server_port: ${{ secrets.DEFAULT_SSH_PORT }}
+          server_ssh_key: ${{ secrets.DEFAULT_SSH_KEY }}
