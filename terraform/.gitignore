@@ -30,10 +30,6 @@ terraform.rc
 *.swo
 *~
 
-# Ignore backup files
-*.backup
-*.bak
-
 # Ignore log files
 *.log
 
