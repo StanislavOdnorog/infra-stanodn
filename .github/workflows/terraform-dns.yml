@@ -11,6 +11,10 @@ on:
       - 'terraform/cloudflare/**'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   detect-domains:
     name: "Detect Domains"
@@ -46,6 +50,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
@@ -121,3 +127,13 @@ jobs:
       env:
         TF_VAR_cf_zone_id: ${{ secrets[steps.secret-name.outputs.secret_name] }}
         TF_VAR_cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    - name: Commit and Push State Changes
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add terraform.tfstate terraform.tfstate.backup
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update Terraform state for ${{ matrix.domain }} [skip ci]"
+        git push
+      working-directory: ${{ env.TF_WORKING_DIR }}
