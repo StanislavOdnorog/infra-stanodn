@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy Jenkins Agent
+      - name: Deploy Jenkins
         uses: ./.github/actions/deploy-docker-compose
         with:
           server_host: 'jenkins'
@@ -24,3 +24,4 @@ jobs:
           server_username: ${{ secrets.DEFAULT_SSH_USER }}
           server_port: ${{ secrets.DEFAULT_SSH_PORT }}
           server_ssh_key: ${{ secrets.DEFAULT_SSH_KEY }}
+
