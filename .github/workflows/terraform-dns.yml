@@ -40,7 +40,6 @@ jobs:
         domain: ${{ fromJson(needs.detect-domains.outputs.domains) }}
     
     env:
-      TF_VERSION: "1.7.0"
       TF_WORKING_DIR: "terraform/cloudflare/${{ matrix.domain }}"
     
     steps:
@@ -49,8 +48,6 @@ jobs:
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: ${{ env.TF_VERSION }}
 
     - name: Convert domain to secret name
       id: secret-name
