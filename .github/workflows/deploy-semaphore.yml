@@ -1,26 +1,27 @@
-name: Deploy Jenkins
+name: Deploy Semaphore
 
 on:
   push:
     branches: [ main ]
     paths:
       - 'semaphore/**'
-      - '.github/workflows/deploy-semaphore.yml'
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: self-hosted
+    env:
+      SERVICE_NAME: 'semaphore'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy Semaphore
+      - name: Deploy
         uses: ./.github/actions/deploy-docker-compose
         with:
-          server_host: ${{ secrets.SEMAPHORE_SERVER_HOST }}
-          server_username: ${{ secrets.SEMAPHORE_SERVER_USERNAME }}
-          server_port: ${{ secrets.SEMAPHORE_SERVER_PORT }}
-          server_ssh_key: ${{ secrets.HOMELAB_SSH_KEY }}
-          service_name: 'semaphore'
-          source_path: 'semaphore'
+          server_host: ${{ env.SERVICE_NAME }}
+          service_name: ${{ env.SERVICE_NAME }}
+          source_path: ${{ env.SERVICE_NAME }}
+          server_username: ${{ secrets.DEFAULT_SSH_USER }}
+          server_port: ${{ secrets.DEFAULT_SSH_PORT }}
+          server_ssh_key: ${{ secrets.DEFAULT_SSH_KEY }}
