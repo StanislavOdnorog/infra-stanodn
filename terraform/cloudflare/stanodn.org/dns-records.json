@@ -16,6 +16,14 @@
     "comment": "Jenkins server"
   },
   {
+    "name": "semaphore",
+    "type": "A",
+    "value": "77.37.156.63",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Semaphore server"
+  },
+  {
     "name": "mail",
     "type": "A",
     "value": "91.132.132.208",
