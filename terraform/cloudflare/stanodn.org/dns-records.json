@@ -1,11 +1,11 @@
 [
   {
-    "name": "test",
+    "name": "n8n",
     "type": "A",
     "value": "77.37.156.63",
     "proxied": true,
     "ttl": 1,
-    "comment": "Test server"
+    "comment": "N8N server"
   },
   {
     "name": "jenkins",
