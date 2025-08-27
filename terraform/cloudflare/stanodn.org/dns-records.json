@@ -1,5 +1,13 @@
 [
   {
+    "name": "med",
+    "type": "A",
+    "value": "91.132.132.208",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Med server"
+  },
+  {
     "name": "n8n",
     "type": "A",
     "value": "77.37.156.63",
