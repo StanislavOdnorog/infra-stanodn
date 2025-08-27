@@ -1,5 +1,13 @@
 [
   {
+    "name": "tele",
+    "type": "A",
+    "value": "91.132.132.208",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Tele server"
+  },
+  {
     "name": "med",
     "type": "A",
     "value": "91.132.132.208",
