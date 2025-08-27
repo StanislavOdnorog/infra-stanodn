@@ -3,7 +3,7 @@
     "name": "med",
     "type": "A",
     "value": "91.132.132.208",
-    "proxied": false,
+    "proxied": true,
     "ttl": 1,
     "comment": "Med server"
   },
