@@ -2,7 +2,7 @@
   {
     "name": "tele",
     "type": "A",
-    "value": "91.132.132.208",
+    "value": "45.136.124.28",
     "proxied": true,
     "ttl": 1,
     "comment": "Tele server"
@@ -10,7 +10,7 @@
   {
     "name": "med",
     "type": "A",
-    "value": "91.132.132.208",
+    "value": "45.136.124.28",
     "proxied": true,
     "ttl": 1,
     "comment": "Med server"
@@ -42,7 +42,7 @@
   {
     "name": "mail",
     "type": "A",
-    "value": "91.132.132.208",
+    "value": "45.136.124.28",
     "proxied": false,
     "comment": "Mail server"
   },
@@ -68,13 +68,6 @@
     "value": "45.159.210.230",
     "proxied": false,
     "comment": "Russian server"
-  },
-  {
-    "name": "web",
-    "type": "A",
-    "value": "91.132.132.208",
-    "proxied": false,
-    "comment": "Web server"
   },
   {
     "name": "autoconfig",
