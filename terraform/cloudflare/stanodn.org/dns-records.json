@@ -2,7 +2,7 @@
   {
     "name": "tele",
     "type": "A",
-    "value": "45.136.124.28",
+    "value": "194.135.119.43",
     "proxied": true,
     "ttl": 1,
     "comment": "Tele server"
@@ -10,7 +10,7 @@
   {
     "name": "med",
     "type": "A",
-    "value": "45.136.124.28",
+    "value": "194.135.119.43",
     "proxied": true,
     "ttl": 1,
     "comment": "Med server"
