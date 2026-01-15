@@ -1,5 +1,13 @@
 [
   {
+    "name": "espo",
+    "type": "A",
+    "value": "45.159.210.230",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "EspoCRM server"
+  },
+  {
     "name": "tele",
     "type": "A",
     "value": "194.135.119.43",
