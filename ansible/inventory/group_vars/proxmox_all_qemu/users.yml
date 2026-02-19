@@ -5,6 +5,7 @@ present_users:
     ssh_keys:
       - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILx4I1Jn1KrZ7sbGRZkmtAY+1wG4kONRONL1pqWxG1BJ"
       - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCzUXlDKjVBkd5g9HZmlElOJHaAhRSOACSe3N16JCMcj7w96opfwdrmq+wri9tUkyPQJeNknO83KtZyIeOwyTNcDAuDS27UWPHCv1qLCr2xk7iUXe+8hW7DisuVJ2/GOkdqxwjto3a8Npvc3gHJmrvKDLqiRaal6pxkVTwA/peMjLIKrEc6NATY4+Uu/EGNDbo9dToqmQyvD/iArz5+1kwG0VD4x1PXzBmTsv7PC6QDEciMN/TcXAKaN3oqtOm0wheYYInFy36yQEP4lgRwTUseMr1hSzpdpi3eN2BujB1zzDxWvN+NN3GdWVvdabbb2ORkC2F/XgTUu9UHffKDJreF7rJ66nKORcgMxuBBv9fOj1yXM1topsBFNfI+R+YDkSJozgfZCZHQUbzXiuzDyLtfA3fGcT4k1pja19OpodVrimoxsHAzoeQo2hyBDtPdOrXUEsZNeY4Mh2hkGYwrdXarsuhW2oUsrQrr2qByzlvQITf9PCdpACxcxpJEVNctUBk="
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK45F6W1OMi7pHdxHo8rl4U82QlZk8nJpYSn36iTWXC1 saas@saas-pi"
     aliases:
       - ll='ls -alF --color=auto'
       - gs='git status'
