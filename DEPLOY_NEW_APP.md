@@ -96,12 +96,13 @@ terraform apply
 
 ---
 
-## 6) Jenkins Pipeline Option (Recommended)
-There is a pipeline in `jenkinsfiles/Jenkinsfile.ansible-playbooks` that:
+## 6) Jenkins Pipeline (Primary Path)
+There is already a Jenkins pipeline in `jenkinsfiles/Jenkinsfile.ansible-playbooks` and this is the **preferred/standard** way to deploy:
 - discovers playbooks + inventory
 - runs with vault password from Jenkins credentials
+- avoids local vault handling
 
-Use it when you don’t want to handle vault locally.
+Use it for all routine deploys; run playbooks locally only when Jenkins is unavailable.
 
 ---
 
