@@ -71,6 +71,14 @@
     "comment": "Proxmox server"
   },
   {
+    "name": "habbit",
+    "type": "A",
+    "value": "77.37.156.63",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "Habbit app"
+  },
+  {
     "name": "serv-ru",
     "type": "A",
     "value": "45.159.210.230",
