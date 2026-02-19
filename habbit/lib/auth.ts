@@ -14,10 +14,14 @@ export async function createSession(userId: string) {
   cookies().set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     expires: expiresAt,
     path: '/'
   });
+}
+
+export function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
 }
 
 export async function getCurrentUser() {
@@ -38,5 +42,5 @@ export async function clearSession() {
   if (token) {
     await prisma.session.deleteMany({ where: { token } });
   }
-  cookies().set(SESSION_COOKIE, '', { expires: new Date(0), path: '/' });
+  cookies().set(SESSION_COOKIE, '', { expires: new Date(0), path: '/', httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
 }

@@ -12,8 +12,8 @@ export function getTransport() {
   });
 }
 
-export async function sendVerificationEmail(to: string, token: string) {
-  const url = `${process.env.APP_URL}/verify?token=${token}`;
+export async function sendVerificationEmail(to: string, token: string, baseUrl: string) {
+  const url = `${baseUrl}/verify?token=${token}`;
   const transporter = getTransport();
   await transporter.sendMail({
     from: process.env.SMTP_FROM,

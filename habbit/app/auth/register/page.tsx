@@ -10,7 +10,8 @@ export default function Register() {
     e.preventDefault();
     setMessage('');
     const res = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password }) });
-    if (!res.ok) { setMessage('Registration failed'); return; }
+    const data = await res.json().catch(()=>({}));
+    if (!res.ok) { setMessage(data.error || 'Registration failed'); return; }
     setMessage('Check your email to verify.');
   }
 
@@ -18,10 +19,10 @@ export default function Register() {
     <div className="card">
       <h2>Register</h2>
       <form onSubmit={submit} className="grid">
-        <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} />
-        <input placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-        {message && <div>{message}</div>}
-        <button type="submit">Create account</button>
+        <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} required />
+        <input placeholder="Password (min 8)" type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
+        {message && <div className="alert">{message}</div>}
+        <button type="submit" className="btn btn-primary">Create account</button>
       </form>
     </div>
   );
