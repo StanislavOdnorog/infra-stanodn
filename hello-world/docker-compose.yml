@@ -1,9 +1,0 @@
-version: '3.8'
-
-services:
-  hello-world:
-    image: nginxdemos/hello:latest
-    container_name: hello-world
-    ports:
-      - "8088:80"
-    restart: unless-stopped

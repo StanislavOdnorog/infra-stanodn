@@ -63,14 +63,6 @@
     "comment": "Pi-hole DNS server"
   },
   {
-    "name": "hello-world",
-    "type": "A",
-    "value": "77.37.156.63",
-    "proxied": true,
-    "ttl": 1,
-    "comment": "Hello World demo"
-  },
-  {
     "name": "proxmox",
     "type": "A",
     "value": "77.37.156.63",
