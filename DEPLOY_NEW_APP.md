@@ -96,13 +96,16 @@ terraform apply
 
 ---
 
-## 6) Jenkins Pipeline (Primary Path)
-There is already a Jenkins pipeline in `jenkinsfiles/Jenkinsfile.ansible-playbooks` and this is the **preferred/standard** way to deploy:
-- discovers playbooks + inventory
-- runs with vault password from Jenkins credentials
-- avoids local vault handling
+## 6) GitHub Actions (Primary Path)
+There are existing GitHub Actions workflows in `.github/workflows/` (e.g. `deploy-n8n.yml`, `deploy-reverse-proxy.yml`) and this is the **preferred/standard** way to deploy:
+- uses the composite action `.github/actions/deploy-docker-compose`
+- SCPs the service folder to the target host
+- runs `docker-compose down/up -d` remotely
 
-Use it for all routine deploys; run playbooks locally only when Jenkins is unavailable.
+Use Actions for routine deploys; run playbooks locally only when Actions are unavailable.
+
+## 7) Jenkins Pipeline (Secondary)
+There is also a Jenkins pipeline in `jenkinsfiles/Jenkinsfile.ansible-playbooks` for running Ansible playbooks with vault access.
 
 ---
 
