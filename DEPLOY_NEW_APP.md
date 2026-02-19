@@ -16,17 +16,17 @@ Hosts (aliases from `projects/.stan-lab-list-of-hosts`):
 ---
 
 ## 1) Create the App Folder
-Create a new app directory in `docker-apps/`:
+Create a new app directory at the repo root (same level as `n8n/`, `jenkins/`, etc.):
 ```
- docker-apps/
-   my-app/
-     docker-compose.yml
-     .env.example   # recommended
+ my-app/
+   docker-compose.yml
+   .env.example   # recommended
 ```
 
 Notes:
 - Keep everything self‑contained in the app folder.
 - If the app needs persistent data, define named volumes in the compose file.
+- **.env is set manually on the host after deploy.**
 
 ---
 
@@ -41,24 +41,25 @@ ansible-playbook ansible/playbooks/general/install/docker.yml \
 
 ---
 
-## 3) Deploy the App to a Host
-Use the custom app deploy playbook:
-```
-ansible-playbook ansible/playbooks/general/install/custom-app.yml \
-  --extra-vars "app_dir=my-app target=<host-or-group>"
-```
+## 3) Deploy the App (GitHub Actions)
+Use the **generic** workflow: `Deploy Generic Service` (new workflow).
 
-What it does (see `ansible/roles/configure/docker-deploy`):
-- Packs `docker-apps/<app>` locally
-- Uploads to `/opt/docker-apps/<app>` on the target
-- Copies `.env.example → .env` if missing
+Inputs:
+- `service_name` = folder name on the server (e.g. `my-app`)
+- `source_path` = repo path to deploy (e.g. `my-app`)
+- `server_host` = SSH host (e.g. `n8n`)
+
+The action:
+- SCPs the folder to the target host
 - Runs `docker-compose down` + `docker-compose up -d`
 
 **Manual alternative** (SSH to host):
 ```
-cd /opt/docker-apps/my-app
+cd ~/my-app
 sudo docker-compose up -d
 ```
+
+> After deploy, SSH to the host and fill in `.env` (it’s not auto‑created).
 
 ---
 
@@ -68,12 +69,14 @@ Add a new server file in:
 reverse-proxy/nginx/conf.d/servers/<app>.stanodn.org.conf
 ```
 Use the existing configs (e.g., `n8n.stanodn.org.conf`) as a template.
-Make sure `proxy_pass` points to the app’s internal host/port.
+Make sure `proxy_pass` points to the **lab host**, e.g.:
+```
+proxy_pass http://n8n.stanodn.lab:<PORT>;
+```
 
 Reload nginx on the gateway:
 ```
 ssh stan-lab-gw01
-cd /opt/docker-apps/reverse-proxy  # or wherever it is deployed
 sudo docker-compose exec nginx nginx -s reload
 ```
 
@@ -97,10 +100,8 @@ terraform apply
 ---
 
 ## 6) GitHub Actions (Primary Path)
-There are existing GitHub Actions workflows in `.github/workflows/` (e.g. `deploy-n8n.yml`, `deploy-reverse-proxy.yml`) and this is the **preferred/standard** way to deploy:
-- uses the composite action `.github/actions/deploy-docker-compose`
-- SCPs the service folder to the target host
-- runs `docker-compose down/up -d` remotely
+Use the **generic** workflow: `.github/workflows/deploy-generic.yml`.
+It wraps the composite action `.github/actions/deploy-docker-compose` and works for any folder.
 
 Use Actions for routine deploys; run playbooks locally only when Actions are unavailable.
 
