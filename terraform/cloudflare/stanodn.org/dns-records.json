@@ -50,7 +50,7 @@
   {
     "name": "mail",
     "type": "A",
-    "value": "194.135.119.43",
+    "value": "45.136.124.28",
     "proxied": false,
     "comment": "Mail server"
   },
