@@ -1,5 +1,13 @@
 [
   {
+    "name": "kinopeer",
+    "type": "A",
+    "value": "77.37.156.63",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "KinoPeer application"
+  },
+  {
     "name": "espo",
     "type": "A",
     "value": "45.159.210.230",
