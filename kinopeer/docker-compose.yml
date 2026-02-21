@@ -16,7 +16,7 @@ services:
       retries: 10
 
   app:
-    image: ghcr.io/stanislavodnoro/kinopeer:${IMAGE_TAG:-latest}
+    image: ghcr.io/stanislavodnorog/kinopeer:745d9b2
     container_name: kinopeer-app
     restart: unless-stopped
     depends_on:
