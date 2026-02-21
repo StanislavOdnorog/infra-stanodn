@@ -15,9 +15,9 @@ services:
       timeout: 5s
       retries: 10
 
-  app:
+  kinopeer:
     image: ghcr.io/stanislavodnorog/kinopeer:745d9b2
-    container_name: kinopeer-app
+    container_name: kinopeer
     restart: unless-stopped
     depends_on:
       postgres:
