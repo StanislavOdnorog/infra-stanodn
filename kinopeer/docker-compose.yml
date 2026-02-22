@@ -1,4 +1,22 @@
+# ============================================================
+# KinoPeer — Production Docker Compose (Microservices)
+#
+# Runs the full stack: Next.js frontend, Spring Boot
+# microservices, API Gateway, and PostgreSQL.
+#
+# All service images are pulled from GitHub Container Registry.
+#
+# Quick start
+#   Run:   docker compose up -d
+#   Stop:  docker compose down
+#   Logs:  docker compose logs -f
+#   Health: docker compose ps
+# ============================================================
+
 services:
+  # ----------------------------------------------------------
+  # PostgreSQL — shared instance with per-service databases
+  # ----------------------------------------------------------
   postgres:
     image: postgres:16
     container_name: kinopeer-postgres
@@ -9,14 +27,18 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres} -d kinopeer']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
       interval: 5s
       timeout: 5s
       retries: 10
 
+  # ----------------------------------------------------------
+  # Next.js frontend application
+  # ----------------------------------------------------------
   kinopeer:
-    image: ghcr.io/stanislavodnorog/kinopeer:745d9b2
+    image: ghcr.io/stanislavodnorog/kinopeer:${IMAGE_TAG:-latest}
     container_name: kinopeer
     restart: unless-stopped
     depends_on:
@@ -30,8 +52,227 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/kinopeer?schema=public
       DIRECT_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/kinopeer?schema=public
       NODE_ENV: production
+      # Feature flags — enable microservices
+      FEATURE_MICROSERVICES_AUTH: 'true'
+      FEATURE_MICROSERVICES_CHAT: 'true'
+      FEATURE_MICROSERVICES_REVIEWS: 'true'
+      FEATURE_MICROSERVICES_APPLICATIONS: 'true'
+      FEATURE_MICROSERVICES_PROJECTS: 'true'
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:3000/api/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # Auth Service — authentication, registration, JWT
+  # ----------------------------------------------------------
+  auth-service:
+    image: ghcr.io/stanislavodnorog/kinopeer-auth-service:${IMAGE_TAG:-latest}
+    container_name: kinopeer-auth-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:-}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8081/actuator/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # Users Service — user profiles, specialist profiles, equipment
+  # ----------------------------------------------------------
+  users-service:
+    image: ghcr.io/stanislavodnorog/kinopeer-users-service:${IMAGE_TAG:-latest}
+    container_name: kinopeer-users-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/users_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8082/actuator/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # Projects Service — project CRUD, vacancies
+  # ----------------------------------------------------------
+  projects-service:
+    image: ghcr.io/stanislavodnorog/kinopeer-projects-service:${IMAGE_TAG:-latest}
+    container_name: kinopeer-projects-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/projects_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8083/actuator/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # Applications Service — project applications/responses
+  # ----------------------------------------------------------
+  applications-service:
+    image: ghcr.io/stanislavodnorog/kinopeer-applications-service:${IMAGE_TAG:-latest}
+    container_name: kinopeer-applications-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8084
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/applications_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      PROJECTS_SERVICE_URL: http://projects-service:8083
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8084/actuator/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # Chat Service — conversations, messages, real-time
+  # ----------------------------------------------------------
+  chat-service:
+    image: ghcr.io/stanislavodnorog/kinopeer-chat-service:${IMAGE_TAG:-latest}
+    container_name: kinopeer-chat-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/chat_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8085/actuator/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # Reviews Service — specialist reviews, ratings
+  # ----------------------------------------------------------
+  reviews-service:
+    image: ghcr.io/stanislavodnorog/kinopeer-reviews-service:${IMAGE_TAG:-latest}
+    container_name: kinopeer-reviews-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8086
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/reviews_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      PROJECTS_SERVICE_URL: http://projects-service:8083
+      APPLICATIONS_SERVICE_URL: http://applications-service:8084
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8086/actuator/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # Notifications Service — email notifications via SMTP
+  # ----------------------------------------------------------
+  notifications-service:
+    image: ghcr.io/stanislavodnorog/kinopeer-notifications-service:${IMAGE_TAG:-latest}
+    container_name: kinopeer-notifications-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8087
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notifications_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      NOTIFICATION_FROM: ${SMTP_FROM:-noreply@kinopeer.com}
+      PLATFORM_URL: ${NEXTAUTH_URL:-https://kinopeer.stanodn.org}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8087/actuator/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # API Gateway — Spring Cloud Gateway routing to all services
+  # ----------------------------------------------------------
+  gateway:
+    image: ghcr.io/stanislavodnorog/kinopeer-gateway:${IMAGE_TAG:-latest}
+    container_name: kinopeer-gateway
+    restart: unless-stopped
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      users-service:
+        condition: service_healthy
+      projects-service:
+        condition: service_healthy
+      applications-service:
+        condition: service_healthy
+      chat-service:
+        condition: service_healthy
+      reviews-service:
+        condition: service_healthy
+      notifications-service:
+        condition: service_healthy
+    ports:
+      - '8080:8080'
+    environment:
+      SERVER_PORT: 8080
+      AUTH_SERVICE_URL: http://auth-service:8081
+      USERS_SERVICE_URL: http://users-service:8082
+      PROJECTS_SERVICE_URL: http://projects-service:8083
+      APPLICATIONS_SERVICE_URL: http://applications-service:8084
+      CHAT_SERVICE_URL: http://chat-service:8085
+      REVIEWS_SERVICE_URL: http://reviews-service:8086
+      NOTIFICATIONS_SERVICE_URL: http://notifications-service:8087
+      JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -sf http://localhost:8080/actuator/health || exit 1']
       interval: 10s
       timeout: 5s
       retries: 5
