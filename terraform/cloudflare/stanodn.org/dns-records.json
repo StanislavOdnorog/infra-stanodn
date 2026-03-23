@@ -1,11 +1,11 @@
 [
   {
-    "name": "kinopeer",
+    "name": "saas-node-01",
     "type": "A",
-    "value": "77.37.156.63",
-    "proxied": true,
+    "value": "88.99.115.43",
+    "proxied": false,
     "ttl": 1,
-    "comment": "KinoPeer application"
+    "comment": "saas-node-01"
   },
   {
     "name": "espo",
