@@ -1,6 +1,6 @@
 [
   {
-    "name": "saas-node-01",
+    "name": "argocd",
     "type": "A",
     "value": "88.99.115.43",
     "proxied": false,
