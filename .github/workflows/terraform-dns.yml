@@ -121,7 +121,7 @@ jobs:
           })
 
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       run: terraform apply -auto-approve
       working-directory: ${{ env.TF_WORKING_DIR }}
       env:
@@ -129,7 +129,7 @@ jobs:
         TF_VAR_cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
     - name: Commit and Push State Changes
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
