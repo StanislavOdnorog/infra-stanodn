@@ -18,7 +18,7 @@ permissions:
 jobs:
   detect-domains:
     name: "Detect Domains"
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       domains: ${{ steps.get-domains.outputs.domains }}
     
