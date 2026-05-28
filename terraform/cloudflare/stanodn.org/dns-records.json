@@ -176,5 +176,13 @@
     "type": "TXT",
     "value": "v=spf1 mx a:mail.stanodn.org include:spf.smtp2go.com ~all",
     "comment": "SPF record"
+  },
+  {
+    "name": "is-vpn-okay",
+    "type": "A",
+    "value": "45.159.210.230",
+    "proxied": true,
+    "ttl": 1,
+    "comment": "VPN status board"
   }
 ]
