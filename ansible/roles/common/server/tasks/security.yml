@@ -46,7 +46,19 @@
     - 169.254.0.0/16
   when: docker | default(false) | bool
 
-- name: Update SSH config. Disable root login, password auth and enable key auth
+- name: Install early SSH hardening drop-in
+  copy:
+    dest: /etc/ssh/sshd_config.d/00-ansible-hardening.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+
+- name: Keep base sshd_config aligned with hardening defaults
   lineinfile:
     path: /etc/ssh/sshd_config
     state: present
@@ -56,7 +68,18 @@
   loop:
     - { regexp: '^#?PermitRootLogin\s+', line: 'PermitRootLogin no' }
     - { regexp: '^#?PasswordAuthentication\s+', line: 'PasswordAuthentication no' }
+    - { regexp: '^#?KbdInteractiveAuthentication\s+', line: 'KbdInteractiveAuthentication no' }
     - { regexp: '^#?PubkeyAuthentication\s+', line: 'PubkeyAuthentication yes' }
+
+- name: Remove root authorized SSH keys
+  file:
+    path: /root/.ssh/authorized_keys
+    state: absent
+
+- name: Lock root account password
+  user:
+    name: root
+    password_lock: true
 
 - name: Restart SSH
   service:
