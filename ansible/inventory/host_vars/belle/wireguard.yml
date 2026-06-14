@@ -1,0 +1,19 @@
+---
+wireguard_interface: wg0
+wireguard_port: 51820
+wireguard_domain: mayakplay.lc
+wireguard_server_vpn_ip: 10.66.66.1
+wireguard_server_address: 10.66.66.1/24
+wireguard_network_cidr: 10.66.66.0/24
+wireguard_client_allowed_ips:
+  - 10.66.66.0/24
+  - 10.42.0.0/16
+  - 10.43.0.0/16
+wireguard_client_config_dir: /home/belle/wireguard-clients
+wireguard_peers:
+  - name: stanislav_odnorog
+    address: 10.66.66.10/32
+    public_key: "LjMhqJd9E3rh0qKeeMnA4hY1DtW/om5LawxMzS3+rhg="
+  - name: konstantin_mayakovskiy
+    address: 10.66.66.11/32
+    public_key: "MYCGGexz5POthigfHZGK+FC7SQGrnfypL8M9VW2TDEA="

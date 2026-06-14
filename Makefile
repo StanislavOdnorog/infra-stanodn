@@ -13,7 +13,7 @@ APP_DIR ?=
 
 .DEFAULT_GOAL := help
 
-.PHONY: help inventory-graph ping server-init docker-install k3s-install app-deploy vpn-install template-ubuntu syntax-static syntax-proxmox check guard-TARGET guard-APP_DIR
+.PHONY: help inventory-graph ping server-init docker-install k3s-install wireguard-localdns app-deploy vpn-install template-ubuntu syntax-static syntax-proxmox check guard-TARGET guard-APP_DIR
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "%-18s %s\n", $$1, $$2}'
@@ -33,6 +33,9 @@ docker-install: guard-TARGET ## Install Docker and Docker Compose on a host
 k3s-install: guard-TARGET ## Install or reconcile a single-node k3s server on a host
 	$(ANSIBLE_PLAYBOOK) -i $(STATIC_INVENTORY) ansible/playbooks/general/install/k3s.yml --extra-vars "target=$(TARGET)"
 
+wireguard-localdns: guard-TARGET ## Install WireGuard access VPN with local mayakplay.lc DNS on a host
+	$(ANSIBLE_PLAYBOOK) -i $(STATIC_INVENTORY) ansible/playbooks/general/install/wireguard-localdns.yml --extra-vars "target=$(TARGET)"
+
 app-deploy: guard-TARGET guard-APP_DIR ## Deploy a docker-apps/<APP_DIR> project to a host
 	$(ANSIBLE_PLAYBOOK) -i $(STATIC_INVENTORY) ansible/playbooks/general/install/custom-app.yml --extra-vars "target=$(TARGET) app_dir=$(APP_DIR)"
 
@@ -47,6 +50,7 @@ syntax-static: ## Syntax-check the main static-inventory playbooks
 	$(ANSIBLE_PLAYBOOK) -i $(STATIC_INVENTORY) ansible/playbooks/general/configure/server/init.yml --syntax-check --extra-vars "target=$(STATIC_HOST)"
 	$(ANSIBLE_PLAYBOOK) -i $(STATIC_INVENTORY) ansible/playbooks/general/install/docker.yml --syntax-check --extra-vars "target=$(STATIC_HOST)"
 	$(ANSIBLE_PLAYBOOK) -i $(STATIC_INVENTORY) ansible/playbooks/general/install/k3s.yml --syntax-check --extra-vars "target=$(STATIC_HOST)"
+	$(ANSIBLE_PLAYBOOK) -i $(STATIC_INVENTORY) ansible/playbooks/general/install/wireguard-localdns.yml --syntax-check --extra-vars "target=$(STATIC_HOST)"
 	$(ANSIBLE_PLAYBOOK) -i $(STATIC_INVENTORY) ansible/playbooks/general/install/custom-app.yml --syntax-check --extra-vars "target=$(STATIC_HOST) app_dir=example-app"
 
 syntax-proxmox: ## Syntax-check the Proxmox template playbook against a static inventory host

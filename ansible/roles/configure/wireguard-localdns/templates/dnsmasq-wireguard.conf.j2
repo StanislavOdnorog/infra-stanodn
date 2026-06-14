@@ -1,0 +1,13 @@
+bind-dynamic
+interface={{ wireguard_interface }}
+listen-address={{ wireguard_server_vpn_ip }}
+domain-needed
+bogus-priv
+cache-size=1000
+no-resolv
+address=/{{ wireguard_domain }}/{{ wireguard_server_vpn_ip }}
+server=/cluster.local/{{ wireguard_cluster_dns }}
+server=/svc.cluster.local/{{ wireguard_cluster_dns }}
+{% for upstream in wireguard_upstream_dns %}
+server={{ upstream }}
+{% endfor %}

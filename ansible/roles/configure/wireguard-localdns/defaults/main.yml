@@ -1,0 +1,20 @@
+---
+wireguard_interface: wg0
+wireguard_port: 51820
+wireguard_domain: mayakplay.lc
+wireguard_server_vpn_ip: 10.66.66.1
+wireguard_server_address: "{{ wireguard_server_vpn_ip }}/24"
+wireguard_network_cidr: 10.66.66.0/24
+wireguard_cluster_dns: 10.43.0.10
+wireguard_upstream_dns:
+  - 1.1.1.1
+  - 8.8.8.8
+wireguard_client_allowed_ips:
+  - 10.66.66.0/24
+  - 10.42.0.0/16
+  - 10.43.0.0/16
+wireguard_server_private_key_path: /etc/wireguard/privatekey
+wireguard_server_public_key_path: /etc/wireguard/publickey
+wireguard_client_config_dir: /home/belle/wireguard-clients
+wireguard_dns_service_name: dnsmasq
+wireguard_peers: []

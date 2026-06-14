@@ -1,0 +1,7 @@
+---
+- name: Install WireGuard VPN and local DNS
+  hosts: "{{ target }}"
+  become: true
+  gather_facts: true
+  roles:
+    - configure/wireguard-localdns

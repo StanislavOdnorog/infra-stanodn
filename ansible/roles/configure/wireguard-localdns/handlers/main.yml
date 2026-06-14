@@ -1,0 +1,17 @@
+---
+- name: Reload sysctl
+  ansible.builtin.command: sysctl --system
+  changed_when: false
+
+- name: Restart wireguard
+  ansible.builtin.systemd:
+    name: "wg-quick@{{ wireguard_interface }}"
+    state: restarted
+    enabled: true
+    daemon_reload: true
+
+- name: Restart dnsmasq
+  ansible.builtin.systemd:
+    name: "{{ wireguard_dns_service_name }}"
+    state: restarted
+    enabled: true
