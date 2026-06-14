@@ -20,4 +20,3 @@ packages:
     present:
       - docker
     absent:
-      - old_software

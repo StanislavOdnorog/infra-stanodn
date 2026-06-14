@@ -1,0 +1,10 @@
+---
+k3s_admin_user: belle
+k3s_kubeconfig_server: 161.104.45.189
+k3s_disable_traefik: false
+k3s_disable_servicelb: false
+k3s_tls_sans:
+  - 161.104.45.189
+  - belle
+  - belle.stanodn.local
+k3s_node_labels: []

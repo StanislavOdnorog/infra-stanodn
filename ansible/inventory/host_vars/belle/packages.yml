@@ -15,9 +15,9 @@ packages:
       - bc
       - acl
       - libssl-dev
+      - curl
+      - ca-certificates
+      - bash-completion
+      - nfs-common
+      - open-iscsi
     absent:
-  custom:
-    present:
-      - docker
-    absent:
-      - old_software

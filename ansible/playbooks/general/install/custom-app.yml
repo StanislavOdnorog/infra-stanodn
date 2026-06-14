@@ -2,8 +2,6 @@
 - name: Deploy Docker Application
   hosts: "{{ target }}"
   become: yes
-  vars_files:
-    - ../../group_vars/all.yml
 
   pre_tasks:
     - name: Validate app directory parameter
@@ -13,7 +11,7 @@
           --extra-vars "app_dir=your-app-name target=server1"
           
           Example:
-          ansible-playbook playbooks/general/docker-deploy.yml \
+          ansible-playbook ansible/playbooks/general/install/custom-app.yml \
             --extra-vars "app_dir=nginx-example target=monitoring"
       when: app_dir is not defined or app_dir == ""
 

@@ -31,7 +31,7 @@
       rules: "{{ ufw.rules | default([]) }}"
       rules_2disable: "{{ ufw.rules_2disable | default([]) }}"
       default_policy: "{{ ufw.default_policy | default('deny') }}"
-      enabled: "{{ ufw.enabled | default('enabled') }}"
+      enabled: "{{ ufw.enabled | default(ufw.state | default('enabled')) }}"
 
 - name: Install UFW
   package:

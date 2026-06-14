@@ -1,5 +1,5 @@
 ufw:
-  enabled: true
+  state: enabled
   default_policy: deny
   rules:
     - name: Allow SSH

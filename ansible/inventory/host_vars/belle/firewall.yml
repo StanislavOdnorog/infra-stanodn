@@ -1,0 +1,23 @@
+---
+ufw:
+  state: enabled
+  default_policy: deny
+  rules:
+    - name: Allow SSH
+      port: 22
+      proto: tcp
+      action: allow
+    - name: Allow HTTP
+      port: 80
+      proto: tcp
+      action: allow
+    - name: Allow HTTPS
+      port: 443
+      proto: tcp
+      action: allow
+    - name: Allow K3s API
+      port: 6443
+      proto: tcp
+      action: allow
+# If this becomes a multi-node cluster later, add internal-only rules for
+# Flannel VXLAN (8472/udp), kubelet (10250/tcp), and any CNI-specific traffic.

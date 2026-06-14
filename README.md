@@ -1,260 +1,169 @@
-# StanODN Infrastructure
+# StanODN Infra
 
-Complete infrastructure setup for StanODN lab environment using Proxmox, Terraform, and Ansible.
+Operational infrastructure repository for Ansible-managed hosts, Proxmox template work, Docker app deployment, and supporting Terraform assets.
 
-## Architecture Overview
+The repo is optimized around two day-to-day flows:
 
-The infrastructure consists of:
-- **Proxmox VE** - Virtualization platform
-- **Terraform** - Infrastructure as Code for VM provisioning
-- **Ansible** - Configuration management and automation
-- **4 VMs** with specific roles:
-  - `stan-runner01` - GitLab/Jenkins CI/CD Runner (2 CPU, 6GB RAM)
-  - `stan-ns01` - DNS/DHCP Server (1 CPU, 4GB RAM)
-  - `stan-gw01` - NGINX Gateway (1 CPU, 4GB RAM)
-  - `stan-acn01` - Jenkins/Ansible Control Node (4 CPU, 16GB RAM)
+- prepare and maintain manually managed servers through static inventory
+- manage Proxmox-related automation and application deployment from the same workspace
+
+## Repository Layout
+
+- `ansible/`
+  - `inventory/static.yml` for manually managed hosts
+  - `inventory/proxmox.yml` for encrypted Proxmox inventory access
+  - `inventory/vpn.yml` for the VPN deployment inventory
+  - `group_vars/` and `host_vars/` for defaults and per-host overrides
+  - `playbooks/general/configure/server/init.yml` for base server preparation
+  - `playbooks/general/install/docker.yml` for Docker installation
+  - `playbooks/general/install/custom-app.yml` for deploying folders from `docker-apps/`
+  - `playbooks/proxmox/template/ubuntu.yml` for the Ubuntu cloud template workflow
+- `docker-apps/` application payloads for Docker-based deployments
+- `terraform/` Terraform code and state related to Proxmox and DNS
+- `reverse-proxy/`, `n8n/`, `semaphore/`, `pxe-boot/`, and others for service-specific assets
+- `docs/NEW_SERVER.md` short checklist for onboarding a new server
 
 ## Prerequisites
 
-- Physical machine with at least 8 CPU cores and 32GB RAM
-- Ubuntu 22.04 LTS for the host system
-- Network access for downloading packages and templates
+- `ansible` installed locally
+- SSH access to the target host
+- the private key referenced by [ansible.cfg](ansible.cfg), or an equivalent override in your environment
+- for Proxmox inventory work, access to the vault password used to decrypt `ansible/inventory/proxmox.yml`
 
-## Step-by-Step Setup Guide
+By default, [ansible.cfg](ansible.cfg) uses:
 
-### 1. Prepare PXE Boot Configuration
+```ini
+inventory = ansible/inventory/proxmox.yml, ansible/inventory/static.yml
+private_key_file = ~/.ssh/home-pc/private
+```
 
-Create a PXE boot directory with configuration files and environment variables:
+For most local operational work, use the static inventory explicitly or the `Makefile` targets below. That avoids vault warnings from the encrypted Proxmox inventory when you are only working with normal hosts.
+
+## Quick Start
+
+List the available helper commands:
 
 ```bash
-# Create PXE boot directory structure
-mkdir -p pxe-boot/{config,.env}
-# Add your PXE configuration files here
+make help
 ```
 
-### 2. Provision Proxmox Machine
-
-1. **Install Proxmox VE** on your physical machine
-2. **Configure storage** - Set up your disk layout (e.g., `disk1tb-01`)
-3. **Configure networking** - Set up `vmbr0` bridge
-4. **Note the Proxmox IP** - You'll need this for Terraform configuration
-
-### 3. Create VM Templates with Ansible
+Show the static inventory graph:
 
 ```bash
-cd ansible
-# Create Ubuntu template (ID 110) with cloud-init
-ansible-playbook playbooks/proxmox/create-templates.yml
+make inventory-graph
 ```
 
-### 4. Create Terraform API Token (Manual)
-
-1. **Login to Proxmox Web UI**
-2. **Go to Datacenter → Permissions → API Tokens**
-3. **Create new token**:
-   - User: `terraform@pam`
-   - Token ID: `terraform`
-   - Privilege Separation: `Yes`
-   - **Save the token secret** - you'll need it for Terraform
-
-### 5. Configure Terraform
+Check SSH connectivity:
 
 ```bash
-cd terraform/proxmox/pve01
-# Copy example configuration
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your actual values:
-# - proxmox_api_url
-# - proxmox_api_token_secret
-# - vm_template_id
-# - vm_storage
-# - ssh_public_keys
+make ping TARGET=vpn-ge
 ```
 
-### 6. Provision VMs with Terraform
+Prepare a server:
 
 ```bash
-cd terraform/proxmox/pve01
-terraform init
-terraform plan
-terraform apply
+make server-init TARGET=vpn-ge
 ```
 
-This will create all 4 VMs with the specified resources:
-- Total: 8 CPU cores, 30.7GB RAM allocated
-
-### 7. Setup GitLab Runner (Manual)
-
-On `stan-runner01`:
+Install Docker:
 
 ```bash
-# Download and configure GitLab runner
-curl -LJO "https://gitlab-runner-downloads.s3.amazonaws.com/latest/deb/gitlab-runner_amd64.deb"
-sudo dpkg -i gitlab-runner_amd64.deb
-sudo gitlab-runner register
-
-# Create systemd service
-sudo tee /etc/systemd/system/gitlab-runner.service << EOF
-[Unit]
-Description=GitLab Runner
-After=network.target
-
-[Service]
-User=ubuntu
-WorkingDirectory=/home/ubuntu/actions-runner
-ExecStart=/home/ubuntu/actions-runner/run.sh
-KillMode=control-group
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl enable gitlab-runner
-sudo systemctl start gitlab-runner
+make docker-install TARGET=vpn-ge
 ```
 
-### 8. Configure DNS Server
-
-On `stan-ns01`:
-
-1. **Install Docker Compose**:
-```bash
-sudo apt update
-sudo apt install docker-compose
-sudo adduser ubuntu docker
-```
-
-2. **Generate environment variables**:
-```bash
-# Use this vim command to generate random strings
-:r !bash -lc 'randhex(){ n=$1; openssl rand -hex $(( (n+1)/2 )) | cut -c1-"$n"; }; printf "%s-%s-%s\n" "$(randhex 5)" "$(randhex 7)" "$(randhex 5)"'
-```
-
-3. **Create .env file** with the generated values
-
-### 9. Disable Previous DHCP
-
-1. **Stop and disable systemd-resolved**:
-```bash
-sudo systemctl stop systemd-resolved
-sudo systemctl disable systemd-resolved
-```
-
-2. **Edit resolved.conf**:
-```bash
-sudo nano /etc/systemd/resolved.conf
-# Add: DNSStubListener=no
-```
-
-### 10. Configure Static IP
-
-On `stan-ns01`, set static IP to `192.168.1.55/24`:
+Deploy a Docker app:
 
 ```bash
-sudo nano /etc/netplan/01-netcfg.yaml
-# Configure static IP with gateway 192.168.1.1
-sudo netplan apply
+make app-deploy TARGET=stan-gw01 APP_DIR=reverse-proxy
 ```
 
-### 11. Update DNS Configuration
-
-1. **Update Terraform DNS servers** in `terraform.tfvars`:
-```hcl
-dns_servers = ["192.168.1.55", "1.1.1.1"]
-```
-
-2. **Update GitLab/GitHub settings** to use `192.168.1.55` as DNS
-
-### 12. Restart All Hosts
+Deploy the VPN stack:
 
 ```bash
-# Restart all VMs to apply new DNS settings
-cd terraform/proxmox/pve01
-terraform apply -replace="proxmox_virtual_environment_vm.ubuntu_vms"
+make vpn-install
 ```
 
-### 13. Propagate SSH Keys
-
-Ensure the runner's SSH key is available on all hosts for Ansible automation:
+Run syntax checks:
 
 ```bash
-# Copy runner's public key to all hosts
-ssh-copy-id ubuntu@stan-ns01
-ssh-copy-id ubuntu@stan-gw01
-ssh-copy-id ubuntu@stan-acn01
+make check
 ```
 
-## Ansible Automation (Future TODOs)
+## Common Workflows
 
-The following steps are currently manual but can be automated with Ansible roles:
+### New Server
 
-- [ ] **Terraform token creation** - Ansible role for API token management
-- [ ] **GitLab runner setup** - Automated runner installation and configuration
-- [ ] **DNS/DHCP server configuration** - Automated server setup
-- [ ] **Docker Compose installation** - Automated Docker setup
-- [ ] **Static IP configuration** - Automated network configuration
+Use [docs/NEW_SERVER.md](docs/NEW_SERVER.md).
 
-## Network Configuration
+In short:
 
-| VM | IP Address | Purpose |
-|---|---|---|
-| `stan-runner01` | DHCP | GitLab/Jenkins Runner |
-| `stan-ns01` | 192.168.1.55/24 | DNS/DHCP Server |
-| `stan-gw01` | 192.168.1.60/24 | NGINX Gateway |
-| `stan-acn01` | DHCP | Jenkins/Ansible Control |
+1. Add the host to `ansible/inventory/static.yml`.
+2. Create `ansible/inventory/host_vars/<host>/`.
+3. Start from the `_snippets/` files.
+4. Run `make ping TARGET=<host>`.
+5. Run `make server-init TARGET=<host>`.
+6. Optionally run `make docker-install TARGET=<host>`.
 
-## Resource Allocation
+### Base Server Preparation
 
-| VM | CPU | RAM | Disk | Purpose |
-|---|---|---|---|---|
-| `stan-runner01` | 2 cores | 6GB | 120GB | CI/CD Runner |
-| `stan-ns01` | 1 core | 4GB | 100GB | DNS/DHCP |
-| `stan-gw01` | 1 core | 4GB | 100GB | NGINX Gateway |
-| `stan-acn01` | 4 cores | 16GB | 200GB | Jenkins/Ansible |
-| **Total** | **8 cores** | **30GB** | **520GB** | **Full Lab** |
+The main onboarding playbook is [ansible/playbooks/general/configure/server/init.yml](ansible/playbooks/general/configure/server/init.yml).
 
-## Troubleshooting
+It applies:
 
-### Common Issues
+- user sync and SSH authorized keys
+- hostname configuration
+- DNS resolver configuration
+- package updates and base packages
+- UFW rules
+- SSH hardening and fail2ban
+- system optimization
 
-1. **Terraform connection errors**: Check Proxmox API URL and token
-2. **VM boot issues**: Verify cloud-init configuration and SSH keys
-3. **Network connectivity**: Ensure DNS server is properly configured
-4. **Ansible connection**: Verify SSH key propagation and user permissions
+Defaults come from:
 
-### Useful Commands
+- [ansible/inventory/group_vars/all/users.yml](ansible/inventory/group_vars/all/users.yml)
+- [ansible/inventory/group_vars/all/packages.yml](ansible/inventory/group_vars/all/packages.yml)
+- [ansible/inventory/group_vars/all/firewall.yml](ansible/inventory/group_vars/all/firewall.yml)
+- [ansible/inventory/group_vars/all/resolved.yml](ansible/inventory/group_vars/all/resolved.yml)
+
+Per-host overrides belong in `ansible/inventory/host_vars/<host>/`.
+
+### Docker Host Setup
+
+Install Docker and Docker Compose:
 
 ```bash
-# Check VM status in Proxmox
-qm list
-
-# View Terraform state
-terraform show
-
-# Test Ansible connectivity
-ansible all -m ping
-
-# Check DNS resolution
-nslookup google.com 192.168.1.55
+make docker-install TARGET=<host>
 ```
 
-## Maintenance
+Then deploy an app from `docker-apps/<app>`:
 
-- **Regular backups**: Backup Terraform state and VM configurations
-- **Updates**: Keep Proxmox, Terraform, and Ansible updated
-- **Monitoring**: Monitor resource usage and VM performance
-- **Security**: Regularly rotate SSH keys and API tokens
+```bash
+make app-deploy TARGET=<host> APP_DIR=<app>
+```
 
-## Contributing
+### Proxmox Template Workflow
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+Create or update the Ubuntu template on a Proxmox host:
 
-## License
+```bash
+make template-ubuntu TARGET=pve01
+```
 
+Relevant defaults live in [ansible/roles/provision/proxmox/image-templates/ubuntu/defaults/main.yml](ansible/roles/provision/proxmox/image-templates/ubuntu/defaults/main.yml).
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+## Inventory Model
+
+- `static.yml` is for normal hosts and is the default local entrypoint.
+- `proxmox.yml` is encrypted and intended for Proxmox-aware inventory access.
+- `vpn.yml` is dedicated to the split VPN deployment flow.
+
+Useful snippet directories:
+
+- `ansible/inventory/group_vars/_snippets/`
+- `ansible/inventory/host_vars/_snippets/`
+
+## Notes
+
+- The repo may contain local operational changes in inventory and roles. Check `git status` before pulling or pushing.
+- If a local Ansible run fails due to SSH routing or environment-specific auth, switch to the remote operator environment rather than retrying blindly from macOS.
+- The base security role disables password authentication for SSH, so confirm key-based access before running `server-init`.

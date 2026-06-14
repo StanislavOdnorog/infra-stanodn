@@ -1,0 +1,9 @@
+---
+- name: Install and configure k3s
+  hosts: "{{ target }}"
+  become: yes
+
+  tasks:
+    - name: Install k3s
+      include_role:
+        name: configure/k3s

@@ -1,0 +1,84 @@
+---
+- name: Ensure packages required for k3s are installed
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - nfs-common
+      - open-iscsi
+    state: present
+    update_cache: true
+
+- name: Ensure k3s config directory exists
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Render k3s config
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart k3s
+
+- name: Install k3s server
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="{{ k3s_server_role }}" K3S_KUBECONFIG_MODE="{{ k3s_write_kubeconfig_mode }}" sh -
+  args:
+    executable: /bin/bash
+    creates: /usr/local/bin/k3s
+  environment: "{{ k3s_install_env }}"
+
+- name: Ensure k3s service is enabled and started
+  ansible.builtin.systemd:
+    name: k3s
+    state: started
+    enabled: true
+
+- name: Apply pending k3s restarts before readiness checks
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for k3s API server
+  ansible.builtin.wait_for:
+    port: 6443
+    host: 127.0.0.1
+    timeout: 180
+
+- name: Ensure admin kube directory exists
+  ansible.builtin.file:
+    path: "/home/{{ k3s_admin_user }}/.kube"
+    state: directory
+    owner: "{{ k3s_admin_user }}"
+    group: "{{ k3s_admin_user }}"
+    mode: "0700"
+
+- name: Read k3s kubeconfig
+  ansible.builtin.slurp:
+    src: /etc/rancher/k3s/k3s.yaml
+  register: k3s_kubeconfig_raw
+
+- name: Write kubeconfig for admin user
+  ansible.builtin.copy:
+    dest: "/home/{{ k3s_admin_user }}/.kube/config"
+    content: "{{ (k3s_kubeconfig_raw.content | b64decode) | replace('https://127.0.0.1:6443', 'https://' ~ k3s_kubeconfig_server ~ ':6443') }}"
+    owner: "{{ k3s_admin_user }}"
+    group: "{{ k3s_admin_user }}"
+    mode: "0600"
+
+- name: Verify k3s node is ready
+  ansible.builtin.command: /usr/local/bin/k3s kubectl get nodes -o wide
+  register: k3s_nodes
+  changed_when: false
+  retries: 18
+  delay: 10
+  until: k3s_nodes.rc == 0
+
+- name: Display k3s node status
+  ansible.builtin.debug:
+    var: k3s_nodes.stdout_lines

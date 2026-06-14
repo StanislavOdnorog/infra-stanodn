@@ -1,0 +1,30 @@
+write-kubeconfig-mode: "{{ k3s_write_kubeconfig_mode }}"
+node-external-ip: "{{ ansible_host | default(ansible_default_ipv4.address) }}"
+tls-san:
+{% for san in k3s_tls_sans | unique %}
+  - "{{ san }}"
+{% endfor %}
+{% set disabled_components = k3s_disabled_components | list %}
+{% if k3s_disable_traefik %}
+{% set _ = disabled_components.append('traefik') %}
+{% endif %}
+{% if k3s_disable_servicelb %}
+{% set _ = disabled_components.append('servicelb') %}
+{% endif %}
+{% if disabled_components | length > 0 %}
+disable:
+{% for component in disabled_components | unique %}
+  - "{{ component }}"
+{% endfor %}
+{% endif %}
+{% if k3s_node_labels | length > 0 %}
+node-label:
+{% for label in k3s_node_labels %}
+  - "{{ label }}"
+{% endfor %}
+{% endif %}
+{% if k3s_extra_server_args | length > 0 %}
+{% for arg in k3s_extra_server_args %}
+{{ arg.key }}: {{ arg.value }}
+{% endfor %}
+{% endif %}

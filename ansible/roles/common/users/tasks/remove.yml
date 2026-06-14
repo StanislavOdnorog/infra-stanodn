@@ -1,4 +1,13 @@
 ---
+- name: Terminate active processes for absent users
+  ansible.builtin.shell: |
+    if id "{{ user.name }}" >/dev/null 2>&1; then
+      pkill -KILL -u "{{ user.name }}" || true
+    fi
+  register: remove_user_processes
+  changed_when: remove_user_processes.stdout != "" or remove_user_processes.stderr != ""
+  failed_when: false
+
 - name: Ensure absent users are absent
   ansible.builtin.user:
     name: "{{ user.name }}"
