@@ -1,5 +1,9 @@
 # Deploying a New Application (StanODN Lab)
 
+**n8n exception:** n8n now runs directly on `vpn-ge` with its own Apache/Let's
+Encrypt endpoint and hosted-runner workflow. Follow [n8n/README.md](n8n/README.md)
+for that service; do not use the legacy lab gateway or generic deployment action.
+
 This repo ships apps via **Docker Compose** + **Ansible** and exposes them through the **NGINX reverse proxy** (stan-gw01) with DNS managed by **Terraform Cloudflare**.
 
 ## Quick Map
