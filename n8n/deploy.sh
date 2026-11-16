@@ -37,7 +37,7 @@ if settings.get('userManagement', {}).get('showSetupOnFirstLoad'):
 PY
 ufw allow 80/tcp
 ufw allow 443/tcp
-mkdir -p /var/www/html/.well-known/acme-challenge
+install -d -m 755 /var/www/html/.well-known /var/www/html/.well-known/acme-challenge
 certbot certonly --webroot -w /var/www/html -d n8n.stanodn.org --non-interactive --agree-tos --email isodnorog@gmail.com --keep-until-expiring
 a2enmod ssl proxy proxy_http headers rewrite
 install -m 644 apache.conf /etc/apache2/sites-available/n8n.conf
