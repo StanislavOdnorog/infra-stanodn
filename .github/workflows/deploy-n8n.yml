@@ -1,27 +1,37 @@
 name: Deploy N8N
-
 on:
   push:
-    branches: [ main ]
-    paths:
-      - 'n8n/**'
+    branches: [main]
+    paths: ['n8n/**', '.github/workflows/deploy-n8n.yml']
   workflow_dispatch:
-
+permissions:
+  contents: read
+concurrency:
+  group: n8n-vpn-ge
+  cancel-in-progress: false
 jobs:
   deploy:
-    runs-on: self-hosted
-    env:
-      SERVICE_NAME: 'n8n'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Deploy
-        uses: ./.github/actions/deploy-docker-compose
-        with:
-          server_host: ${{ env.SERVICE_NAME }}
-          service_name: ${{ env.SERVICE_NAME }}
-          source_path: ${{ env.SERVICE_NAME }}
-          server_username: ${{ secrets.DEFAULT_SSH_USER }}
-          server_port: ${{ secrets.DEFAULT_SSH_PORT }}
-          server_ssh_key: ${{ secrets.DEFAULT_SSH_KEY }}
+      - uses: actions/checkout@v4
+      - name: Update and verify n8n DNS only
+        run: python3 n8n/update-dns.py
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID_STANODN_ORG }}
+      - name: Configure deployment SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.N8N_VPN_GE_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ vars.N8N_VPN_GE_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Deploy persistent stack and renew HTTPS
+        run: |
+          tar -czf - -C n8n docker-compose.yml apache.conf deploy.sh backup.sh |
+            ssh -o BatchMode=yes -o StrictHostKeyChecking=yes root@181.215.15.210
+      - name: Verify public HTTPS
+        run: curl --fail --silent --show-error --retry 8 --retry-delay 15 --retry-all-errors https://n8n.stanodn.org/healthz/readiness

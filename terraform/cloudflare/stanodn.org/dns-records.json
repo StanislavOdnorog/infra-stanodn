@@ -42,10 +42,10 @@
   {
     "name": "n8n",
     "type": "A",
-    "value": "77.37.156.63",
-    "proxied": true,
-    "ttl": 1,
-    "comment": "N8N server"
+    "value": "181.215.15.210",
+    "proxied": false,
+    "ttl": 300,
+    "comment": "n8n on vpn-ge; direct HTTPS with Lets Encrypt"
   },
   {
     "name": "jenkins",
