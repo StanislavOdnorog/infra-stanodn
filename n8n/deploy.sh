@@ -16,6 +16,9 @@ if [ ! -f .env ]; then
   printf 'POSTGRES_PASSWORD=%s\nN8N_ENCRYPTION_KEY=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > .env
 fi
 chmod 600 .env
+if ! grep -q '^N8N_RUNNERS_AUTH_TOKEN=' .env; then
+  printf '\nN8N_RUNNERS_AUTH_TOKEN=%s\n' "$(openssl rand -hex 32)" >> .env
+fi
 docker compose config -q
 if [ -d postgres/base ]; then bash backup.sh; fi
 docker compose pull --quiet

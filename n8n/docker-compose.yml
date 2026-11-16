@@ -42,6 +42,10 @@ services:
       N8N_PROXY_HOPS: '1'
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
       N8N_DIAGNOSTICS_ENABLED: 'false'
+      N8N_RUNNERS_MODE: external
+      N8N_RUNNERS_BROKER_LISTEN_ADDRESS: 0.0.0.0
+      N8N_RUNNERS_AUTH_TOKEN: ${N8N_RUNNERS_AUTH_TOKEN:?required}
+      N8N_RUNNERS_TASK_TIMEOUT: '300'
       GENERIC_TIMEZONE: Asia/Tbilisi
       TZ: Asia/Tbilisi
       EXECUTIONS_DATA_PRUNE: 'true'
@@ -55,4 +59,18 @@ services:
       timeout: 5s
       retries: 20
       start_period: 60s
+    logging: *logging
+  runners:
+    image: n8nio/runners:2.47.7
+    restart: unless-stopped
+    depends_on:
+      n8n:
+        condition: service_healthy
+    environment:
+      N8N_RUNNERS_TASK_BROKER_URI: http://n8n:5679
+      N8N_RUNNERS_AUTH_TOKEN: ${N8N_RUNNERS_AUTH_TOKEN:?required}
+      N8N_RUNNERS_TASK_TIMEOUT: '300'
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
     logging: *logging

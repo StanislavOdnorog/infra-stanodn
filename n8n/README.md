@@ -37,6 +37,9 @@ the next Terraform refresh reconciles its state. Do not apply stale saved plans.
 Never delete these paths during upgrades. Images are explicitly pinned in Compose.
 Only loopback port 5678 is published; PostgreSQL has no host port.
 Webhooks and editor use the public HTTPS URL, timezone Asia/Tbilisi.
+Python and JavaScript Code nodes run in the separate `runners` container, pinned
+to the same version as n8n. Its broker is internal to the Docker network; the
+shared token is generated once in `.env`. Upgrade both images together.
 
 ## Backups and recovery
 
